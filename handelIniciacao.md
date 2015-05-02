@@ -32,14 +32,14 @@ desenvolvimento de robôs.
 Objetivos
 ---------
 
-    * Programar aplicações para robôs em C.
-    * Programar as mesmas aplicações em Céu.
-    * Comparar as implementações nos seguintes termos:
-        * facilidade de implementação e depuração;
-        * tamanho do código fonte (e.g., número de linhas);
-        * tamanho do objeto (executável);
-        * tempo de execução e processamento.
-    * Relatar o processo      
+* Programar aplicações para robôs em C.
+* Programar as mesmas aplicações em Céu.
+* Comparar as implementações nos seguintes termos:
+    * facilidade de implementação e depuração;
+    * tamanho do código fonte (e.g., número de linhas);
+    * tamanho do objeto (executável);
+    * tempo de execução e processamento.
+* Relatar o processo      
     
  
 Metodologia 
@@ -62,9 +62,10 @@ básica do código fonte será reutilizada entre as aplicações.
 Para analisarmos os resultados em termos de processamento, uso de memória e 
 tamanho de código usaremos a seguinte abordagem:
 
-    * tempo médio entre a leitura de um sensor até a ativação dos atuadores;
-    * tamanho em bytes da região de código e dados dos programas;
-    * quantidade de linhas de código, uso de variáveis globais e máquinas de estado explícitas.
+* tempo médio entre a leitura de um sensor até a ativação dos atuadores;
+* tamanho em bytes da região de código e dados dos programas;
+* quantidade de linhas de código, uso de variáveis globais e máquinas de estado 
+  explícitas.
 
 <!--
 As seguintes características da linguagem Céu serão exploradas no processo de 
