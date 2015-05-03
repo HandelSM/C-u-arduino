@@ -25,7 +25,7 @@ Céu é uma linguagem reativa e concorrente desenvolvida no LabLua do
 Departamento de Informática da PUC-Rio.
 A linguagem Céu possui facilidades dedicadas a lidar com entradas do ambiente, 
 tais como sensores e temporizadores, assim como a controlar múltiplas linhas de 
-execução simultânteas.
+execução simultâneas.
 Dessa maneira, acreditamos que Céu seja uma alternativa mais apropriada para o 
 desenvolvimento de robôs.
 
