@@ -67,6 +67,19 @@ tamanho de código usaremos a seguinte abordagem:
 * quantidade de linhas de código, uso de variáveis globais e máquinas de estado 
   explícitas.
 
+Cronograma
+----------
+
+    Descrição                                               1o  2o  3o  4o
+    Levantamento de aplicações para robótica                x
+    Classificação das aplicações (simples, médio, difícil)  x
+    Implementação de aplicações simples                     x
+    Implementação de aplicações médias                          x
+    Implementação de aplicações difíceis                            x   x
+    Redação de relatório e artigo científico                        x   x
+    Apresentações sobre o andamento do projeto              x   x   x   x
+    Análise das aplicações segundo metodologia              x   x   x   x
+
 <!--
 As seguintes características da linguagem Céu serão exploradas no processo de 
 desenvolvimento:
