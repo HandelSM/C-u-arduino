@@ -1,0 +1,34 @@
+#include "arduino.ceu"
+
+native do
+	##include <Servo.h> 
+
+	Servo myservo;	
+
+	
+end
+
+
+_myservo.attach(9);
+var int pos = 0;
+
+output int PIN13;
+
+par do
+	loop do
+		
+		if pos < 180 then
+			pos = pos + 1;
+			_myservo.write(pos);
+		end
+		await 15ms;
+	end
+
+with
+	loop do
+		emit PIN13 => _HIGH;
+	    await 1s;
+	    emit PIN13 => _LOW;
+	    await 1s;
+	end
+end
