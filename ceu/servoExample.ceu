@@ -1,0 +1,21 @@
+#include "arduino.ceu"
+
+native do
+	##include <Servo.h>
+
+	Servo myservo;
+
+end
+
+var int pos = 0;
+
+loop do
+	if pos < 180 then
+		pos = 180;
+		_myservo.write(pos);
+	else
+		pos = 0;
+		_myservo.write(pos);
+	end
+	await 1s;
+end
