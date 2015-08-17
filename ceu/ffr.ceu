@@ -1,21 +1,21 @@
 #include "arduino.ceu"
+#define FFR
 
 native do
-	##include <Servo.h> 
 	##include <NewPing.h>
-
 	##define TRIGGER_PIN_T  10
 	##define ECHO_PIN_T     11
-	
 	##define TRIGGER_PIN_F  12
 	##define ECHO_PIN_F     13
-
-	##define MAX_DISTANCE 200
-
-	Servo myservo;
-
+	##define MAX_DISTANCE 200	
 	NewPing frontSonar(TRIGGER_PIN_F, ECHO_PIN_F, MAX_DISTANCE); 
 	NewPing turnSonar(TRIGGER_PIN_T, ECHO_PIN_T, MAX_DISTANCE);
+
+	##include <Servo.h> 
+	Servo myservo;
+	
+	##define ENCODER_PIN_R 2
+	##define ENCODER_PIN_L 3
 
 	typedef struct motor
 	{
@@ -24,53 +24,43 @@ native do
 	  int pinVel;
 	};
 	typedef struct motor Motor;
-
 	Motor rightM = {255, 6, 7};
 	Motor leftM = {255, 5, 4};
-	
 end
 
 _Serial.begin(115200);
+
 _myservo.attach(9);
-var int pos = 0;
-var int dist = 1;
-var int testDist = 0;
-var bool descartou = false;
-output int PIN13;
+var int servoPos = 0;
+var int distFromWall = 0;
+// var int testDistT = 0;
+
+input bool ENCODER_R;
+var int counterR = 0;
+input bool ENCODER_L; 
+var int counterL = 0;
 
 par do
+	// Calcular distancia da parede
+	var bool descartou = false;
 	loop do
-		testDist = _frontSonar.ping()/ _US_ROUNDTRIP_CM;
-		if testDist > 0 then
-			if testDist - dist < 50 or descartou then
-				dist = testDist;
-			  	_Serial.print("Ping: ");
-			  	_Serial.print(dist); // Convert ping time to distance in cm and print result (0 = outside set distance range)
-			  	_Serial.println("cm");
-			  	descartou = true;
-				await 60ms;
+		var int testDistF = _frontSonar.ping()/_US_ROUNDTRIP_CM;
+		if testDistF > 0 then
+			if _abs(testDistF - distFromWall) < 50 or descartou then
+				distFromWall = testDistF;
+			  	// _Serial.print("Ping: ");
+			  	// _Serial.print(distFromWall);
+			  	// _Serial.println("cm");
+			  	descartou = false;
 			else
 				descartou = true;
 			end
 		end
+		await 50ms;
 	end
 with
 	loop do
-		if dist*10 > 6000 then
-			emit PIN13 => _HIGH;
-		    await 4s;
-		    emit PIN13 => _LOW;
-		    await 4s;
-		else
-			emit PIN13 => _HIGH;
-		    await (dist*10)ms;
-		    emit PIN13 => _LOW;
-		    await (dist*10)ms;
-		end
-	end
-with
-	loop do
-		if dist > 8 then
+		if distFromWall > 8 then
 			_digitalWrite( _rightM.pinWay, _HIGH );
 		    _digitalWrite( _leftM.pinWay, _HIGH );
 		    _analogWrite( _rightM.pinVel, _rightM.vel );
@@ -85,13 +75,61 @@ with
 	end
 with
 	loop do
-		if pos < 180 then
-			pos = 180;
-			_myservo.write(pos);
+		if servoPos < 180 then
+			servoPos = 180;
+			_myservo.write(servoPos);
 		else
-			pos = 0;
-			_myservo.write(pos);
+			servoPos = 0;
+			_myservo.write(servoPos);
 		end
 		await 1s;
+	end
+with
+	par do // DRIVER do ENCODER R
+		var int old = _LOW;
+		loop do
+			var int cur = _digitalRead( _ENCODER_PIN_R );
+			async(cur,old) do
+				if cur != old then
+					old = cur;
+					emit ENCODER_R => cur;
+				end
+			end
+		end
+	with
+		loop do
+			var int c = 0;
+			watching 200ms do
+				every ENCODER_R do
+					c = c + 1;
+					// _Serial.println(c);
+				end
+			end
+			counterR = c;
+		end
+	end
+with
+	par do // DRIVER do ENCODER L
+		var int old = _LOW;
+		loop do
+			var int cur = _digitalRead( _ENCODER_PIN_L );
+			async(cur,old) do
+				if cur != old then
+					old = cur;
+					emit ENCODER_L => cur;
+				end
+			end
+		end
+	with
+		loop do
+			var int c = 0;
+			watching 200ms do
+				every ENCODER_L do
+					c = c + 1;
+					_Serial.println(c);
+				end
+			end
+			counterL = c;
+		end
 	end
 end
