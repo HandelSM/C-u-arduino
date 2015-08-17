@@ -17,15 +17,17 @@ native do
 	##define ENCODER_PIN_R 2
 	##define ENCODER_PIN_L 3
 
+	##define FLAME A0
+
 	typedef struct motor
 	{
 	  float vel;
-	  int pinWay;
 	  int pinVel;
+	  int pinWay;
 	};
 	typedef struct motor Motor;
-	Motor rightM = {255, 6, 7};
-	Motor leftM = {255, 5, 4};
+	Motor rightM = {120, 6, 7};
+	Motor leftM = {120, 5, 4};
 end
 
 _Serial.begin(115200);
@@ -40,6 +42,8 @@ var int counterR = 0;
 input bool ENCODER_L; 
 var int counterL = 0;
 
+var bool fogo = false;
+
 par do
 	// Calcular distancia da parede
 	var bool descartou = false;
@@ -48,9 +52,9 @@ par do
 		if testDistF > 0 then
 			if _abs(testDistF - distFromWall) < 50 or descartou then
 				distFromWall = testDistF;
-			  	// _Serial.print("Ping: ");
-			  	// _Serial.print(distFromWall);
-			  	// _Serial.println("cm");
+			  	_Serial.print("Ping: ");
+			  	_Serial.print(distFromWall);
+			  	_Serial.println("cm");
 			  	descartou = false;
 			else
 				descartou = true;
@@ -60,18 +64,18 @@ par do
 	end
 with
 	loop do
-		if distFromWall > 8 then
+		if distFromWall > 15 then
 			_digitalWrite( _rightM.pinWay, _HIGH );
 		    _digitalWrite( _leftM.pinWay, _HIGH );
 		    _analogWrite( _rightM.pinVel, _rightM.vel );
 		    _analogWrite( _leftM.pinVel,  _leftM.vel );
 		else
-			_digitalWrite( _rightM.pinWay, _LOW );
+			_digitalWrite( _rightM.pinWay, _HIGH );
 		    _digitalWrite( _leftM.pinWay, _HIGH );
-		    _analogWrite( _rightM.pinVel, _rightM.vel );
-		    _analogWrite( _leftM.pinVel,  _leftM.vel );
+		    _analogWrite( _rightM.pinVel, 0 );
+		    _analogWrite( _leftM.pinVel,  0 );
 		end
-	    await 100ms;
+	    await 80ms;
 	end
 with
 	loop do
@@ -126,10 +130,24 @@ with
 			watching 200ms do
 				every ENCODER_L do
 					c = c + 1;
-					_Serial.println(c);
+					// _Serial.println(c);
 				end
 			end
 			counterL = c;
 		end
+	end
+with
+	loop do
+		var int flameSensor = _analogRead(_FLAME);
+
+		if flameSensor > 100 or fogo then
+			fogo = true;
+			// _Serial.println("FOGO!");
+			_rightM.vel = 0;
+			_leftM.vel = 0;
+		else
+			// _Serial.println("Tudo ok.");
+		end
+		await 300ms;
 	end
 end
