@@ -1,0 +1,20 @@
+# include "arduino.ceu"
+
+native do
+	##define FLAME A0
+end
+
+_Serial.begin(115200);
+
+var bool fogo = false;
+loop do
+	var int flameSensor = _analogRead(_FLAME);
+
+	if flameSensor > 100 or fogo then
+		fogo = true;
+		_Serial.println("FOGO!");
+	else
+		_Serial.println("Tudo ok.");
+	end
+	await 500ms;
+end
