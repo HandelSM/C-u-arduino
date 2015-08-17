@@ -1,0 +1,21 @@
+#include "arduino.ceu"
+
+native do
+	typedef struct motor
+	{
+	  float vel;
+	  int pinWay;
+	  int pinVel;
+	};
+	typedef struct motor Motor;
+
+	Motor rightM = {255, 6, 7};
+	Motor leftM = {255, 5, 4};
+end
+
+loop do
+	_digitalWrite( _rightM.pinWay, _HIGH );
+	_digitalWrite( _leftM.pinWay, _HIGH );
+	_analogWrite( _rightM.pinVel, _rightM.vel );
+	_analogWrite( _leftM.pinVel,  _leftM.vel );
+end
