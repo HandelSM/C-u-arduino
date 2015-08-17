@@ -1,0 +1,37 @@
+#include "arduino.ceu"
+
+native do
+	##define ENCODER_PIN 2
+end
+
+input bool ENCODER;
+
+// _Serial.begin(9600);
+
+var int counter = 0;
+
+par do
+	// DRIVER do ENCODER
+	var int old = _LOW;
+	loop do
+		var int cur = _digitalRead( _ENCODER_PIN );
+		async(cur,old) do
+			if cur != old then
+				old = cur;
+				emit ENCODER => cur;
+			end
+		end
+	end
+with
+	loop do
+		var int c = 0;
+		watching 200ms do
+			every ENCODER do
+				c = c + 1;
+				// _Serial.println(c);
+			end
+		end
+		counter = c;
+
+	end
+end
