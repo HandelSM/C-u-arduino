@@ -15,9 +15,11 @@ native do
 	Servo myservo;
 	
 	##define ENCODER_PIN_R 2
-	##define ENCODER_PIN_L 3
+	##define ENCODER_PIN_L 8
 
 	##define FLAME A0
+
+	##define BUZZER_PIN 3
 
 	typedef struct motor
 	{
@@ -26,8 +28,8 @@ native do
 	  int pinWay;
 	};
 	typedef struct motor Motor;
-	Motor rightM = {120, 6, 7};
-	Motor leftM = {120, 5, 4};
+	Motor rightM = {120, 5, 4};
+	Motor leftM = {120, 6, 7};
 end
 
 _Serial.begin(115200);
@@ -44,6 +46,10 @@ var int counterL = 0;
 
 var bool fogo = false;
 
+_analogWrite(_BUZZER_PIN, 100);
+await 200ms;
+_analogWrite(_BUZZER_PIN, 0);
+
 par do
 	// Calcular distancia da parede
 	var bool descartou = false;
@@ -52,9 +58,9 @@ par do
 		if testDistF > 0 then
 			if _abs(testDistF - distFromWall) < 50 or descartou then
 				distFromWall = testDistF;
-			  	_Serial.print("Ping: ");
-			  	_Serial.print(distFromWall);
-			  	_Serial.println("cm");
+			  	// _Serial.print("Ping: ");
+			  	// _Serial.print(distFromWall);
+			  	// _Serial.println("cm");
 			  	descartou = false;
 			else
 				descartou = true;
@@ -102,14 +108,17 @@ with
 		end
 	with
 		loop do
-			var int c = 0;
-			watching 200ms do
+			var int cR = 0;
+			watching 300ms do
 				every ENCODER_R do
-					c = c + 1;
+					cR = cR + 1;
+					// _Serial.print("Encoder R: ");
 					// _Serial.println(c);
 				end
 			end
-			counterR = c;
+			counterR = cR;
+			// _Serial.print("Counter R: ");
+			// _Serial.println(counterR);
 		end
 	end
 with
@@ -126,14 +135,17 @@ with
 		end
 	with
 		loop do
-			var int c = 0;
-			watching 200ms do
+			var int cL = 0;
+			watching 300ms do
 				every ENCODER_L do
-					c = c + 1;
+					cL = cL + 1;
+					// _Serial.print("Encoder L: ");
 					// _Serial.println(c);
 				end
 			end
-			counterL = c;
+			counterL = cL;
+			// _Serial.print("Counter L: ");
+			// _Serial.println(counterL);
 		end
 	end
 with
