@@ -1,0 +1,7 @@
+native do
+	##define BUZZER_PIN 3
+end
+
+loop do
+	_analogWrite( _BUZZER_PIN, 255 );
+end
