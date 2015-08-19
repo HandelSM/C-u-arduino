@@ -1,0 +1,73 @@
+#include "arduino.ceu"
+
+native do
+	##include <PID_v1.h>
+		
+	double setpoint, output, input;
+
+	PID pid(&input, &output, &setpoint, 50, 70, 0, DIRECT);
+
+	##define ENCODER_PIN 2
+
+	typedef struct motor
+	{
+	  float vel;
+	  int pinVel;
+	  int pinWay;
+	};
+	typedef struct motor Motor;
+	Motor rightM = {120, 5, 4};
+
+
+end
+
+input bool ENCODER;
+
+
+_Serial.begin(9600);
+
+var int counter = 0;
+
+_setpoint = 20;
+_pid.SetMode(_AUTOMATIC);
+
+par do
+	loop do
+		_digitalWrite( _rightM.pinWay, _HIGH );
+	    _analogWrite( _rightM.pinVel, _rightM.vel );
+		await 1s;
+	end
+with
+	par do
+		// DRIVER do ENCODER
+		var int old = _LOW;
+		loop do
+			var int cur = _digitalRead( _ENCODER_PIN );
+			async(cur,old) do
+				if cur != old then
+					old = cur;
+					emit ENCODER => cur;
+				end
+			end
+		end
+	with
+		loop do
+			var int c = 0;
+			watching 1s do
+				every ENCODER do
+					c = c + 1;
+				end
+			end
+			counter = c;
+			_Serial.print("Counter: ");
+			_Serial.println(counter);
+
+			_input = counter;
+			_pid.Compute();
+			_rightM.vel = _output;
+
+			_Serial.print("Output: ");
+			_Serial.println(_output);
+		end
+	end
+end
