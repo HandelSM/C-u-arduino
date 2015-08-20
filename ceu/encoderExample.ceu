@@ -6,7 +6,7 @@ end
 
 input bool ENCODER;
 
-// _Serial.begin(9600);
+_Serial.begin(9600);
 
 var int counter = 0;
 
@@ -21,14 +21,16 @@ par do
 				emit ENCODER => cur;
 			end
 		end
+		await 10ms; //debouncing
 	end
 with
+var int c = 0;
 	loop do
-		var int c = 0;
+		
 		watching 200ms do
 			every ENCODER do
 				c = c + 1;
-				// _Serial.println(c);
+				_Serial.println(c);
 			end
 		end
 		counter = c;
