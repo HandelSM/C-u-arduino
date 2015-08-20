@@ -5,7 +5,7 @@ native do
 		
 	double setpoint, output, input;
 
-	PID pid(&input, &output, &setpoint, 50, 70, 0, DIRECT);
+	PID pid(&input, &output, &setpoint, 5, 3, 0, DIRECT);
 
 	##define ENCODER_PIN 2
 
@@ -28,7 +28,7 @@ _Serial.begin(9600);
 
 var int counter = 0;
 
-_setpoint = 20;
+_setpoint = 30;
 _pid.SetMode(_AUTOMATIC);
 
 par do
@@ -49,11 +49,12 @@ with
 					emit ENCODER => cur;
 				end
 			end
-		end
+			await 5ms; //debouncing
+		end		
 	with
 		loop do
 			var int c = 0;
-			watching 1s do
+			watching 200ms do
 				every ENCODER do
 					c = c + 1;
 				end
