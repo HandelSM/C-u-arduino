@@ -21,7 +21,7 @@ par do
 				emit ENCODER => cur;
 			end
 		end
-		await 10ms; //debouncing
+		await 5ms; //debouncing
 	end
 with
 var int c = 0;
@@ -34,6 +34,5 @@ var int c = 0;
 			end
 		end
 		counter = c;
-
 	end
 end
