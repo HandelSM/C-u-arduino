@@ -2,6 +2,12 @@
 #define FFR
 
 native do
+	##include <PID_v1.h>
+	double setpointR, outputR, inputR;
+	double setpointL, outputL, inputL;
+	PID pidR(&inputR, &outputR, &setpointR, 2, 3, 0, DIRECT);
+	PID pidL(&inputL, &outputL, &setpointL, 2, 3, 0, DIRECT);
+
 	##include <NewPing.h>
 	##define TRIGGER_PIN_T  10
 	##define ECHO_PIN_T     11
@@ -34,17 +40,17 @@ end
 
 _Serial.begin(115200);
 
-_myservo.attach(9);
-var int servoPos = 0;
 var int distFromWall = 0;
-// var int testDistT = 0;
 
 input bool ENCODER_R;
 var int counterR = 0;
 input bool ENCODER_L; 
 var int counterL = 0;
 
-var bool fogo = false;
+_setpointR = 20;
+_setpointL = _setpointR;
+_pidR.SetMode(_AUTOMATIC);
+_pidL.SetMode(_AUTOMATIC);
 
 _analogWrite(_BUZZER_PIN, 100);
 await 200ms;
@@ -84,6 +90,8 @@ with
 	    await 80ms;
 	end
 with
+	_myservo.attach(9);
+	var int servoPos = 0;
 	loop do
 		if servoPos < 180 then
 			servoPos = 180;
@@ -105,6 +113,7 @@ with
 					emit ENCODER_R => cur;
 				end
 			end
+			await 5ms; //debouncing
 		end
 	with
 		loop do
@@ -117,8 +126,15 @@ with
 				end
 			end
 			counterR = cR;
-			// _Serial.print("Counter R: ");
-			// _Serial.println(counterR);
+			_Serial.print("Counter R: ");
+			_Serial.println(counterR);
+
+			_inputR = counterR;
+			_pidR.Compute();
+			_rightM.vel = _outputR;
+
+			_Serial.print("OutputR: ");
+			_Serial.println(_outputR);
 		end
 	end
 with
@@ -132,6 +148,7 @@ with
 					emit ENCODER_L => cur;
 				end
 			end
+			await 5ms; //debouncing
 		end
 	with
 		loop do
@@ -144,11 +161,19 @@ with
 				end
 			end
 			counterL = cL;
-			// _Serial.print("Counter L: ");
-			// _Serial.println(counterL);
+			_Serial.print("Counter L: ");
+			_Serial.println(counterL);
+
+			_inputL = counterL;
+			_pidL.Compute();
+			_leftM.vel = _outputL;
+
+			_Serial.print("OutputL: ");
+			_Serial.println(_outputL);
 		end
 	end
 with
+	var bool fogo = false;
 	loop do
 		var int flameSensor = _analogRead(_FLAME);
 
@@ -157,6 +182,7 @@ with
 			// _Serial.println("FOGO!");
 			_rightM.vel = 0;
 			_leftM.vel = 0;
+			_analogWrite(_BUZZER_PIN, 100);
 		else
 			// _Serial.println("Tudo ok.");
 		end
