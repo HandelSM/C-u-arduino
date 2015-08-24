@@ -1,6 +1,18 @@
 Cronograma
 =======================================================
 
+Dia 24/08
+
+* O que deveria fazer:
+	* Melhorar o PID.
+
+* O que fez:
+	* Melhorei o PID, porém ele começa certo e depois acumula erro. Tentei fazer um código que faz o carrinho girar 90º e adicionei um bloco de etapas quando o carrinho está próximo a parede.
+
+
+* O que deve fazer:
+	* Melhorar o PID.
+
 Dia 21/08
 
 * O que deveria fazer:
