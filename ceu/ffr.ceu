@@ -34,20 +34,20 @@ native do
 	  int pinWay;
 	};
 	typedef struct motor Motor;
-	Motor rightM = {120, 5, 4};
-	Motor leftM = {120, 6, 7};
+	Motor rightM = {160, 5, 4};
+	Motor leftM = {160, 6, 7};
 end
 
 _Serial.begin(115200);
 
-var int distFromWall = 0;
+var int distFromFWall = 100;
 
 input bool ENCODER_R;
 var int counterR = 0;
 input bool ENCODER_L; 
 var int counterL = 0;
 
-_setpointR = 20;
+_setpointR = 25;
 _setpointL = _setpointR;
 _pidR.SetMode(_AUTOMATIC);
 _pidL.SetMode(_AUTOMATIC);
@@ -56,16 +56,16 @@ _analogWrite(_BUZZER_PIN, 100);
 await 200ms;
 _analogWrite(_BUZZER_PIN, 0);
 
-par do
-	// Calcular distancia da parede
+par do // Calcular distancia da parede
+	
 	var bool descartou = false;
 	loop do
 		var int testDistF = _frontSonar.ping()/_US_ROUNDTRIP_CM;
 		if testDistF > 0 then
-			if _abs(testDistF - distFromWall) < 50 or descartou then
-				distFromWall = testDistF;
+			if _abs(testDistF - distFromFWall) < 50 or descartou then
+				distFromFWall = testDistF;
 			  	// _Serial.print("Ping: ");
-			  	// _Serial.print(distFromWall);
+			  	// _Serial.print(distFromFWall);
 			  	// _Serial.println("cm");
 			  	descartou = false;
 			else
@@ -73,106 +73,148 @@ par do
 			end
 		end
 		await 50ms;
-	end
+	end 
 with
+	_myservo.attach(9);
+	var int servoPos = 0;
+	var int sideDistance;
 	loop do
-		if distFromWall > 15 then
+		if distFromFWall > 60 then
 			_digitalWrite( _rightM.pinWay, _HIGH );
 		    _digitalWrite( _leftM.pinWay, _HIGH );
 		    _analogWrite( _rightM.pinVel, _rightM.vel );
 		    _analogWrite( _leftM.pinVel,  _leftM.vel );
 		else
-			_digitalWrite( _rightM.pinWay, _HIGH );
-		    _digitalWrite( _leftM.pinWay, _HIGH );
+			 _analogWrite( _rightM.pinVel, 0 );
+		    _analogWrite( _leftM.pinVel,  0 );
+
+		    await 50ms;
+
+			_digitalWrite( _rightM.pinWay, _LOW );
+		    _digitalWrite( _leftM.pinWay, _LOW );
+		    _analogWrite( _rightM.pinVel, 160 );
+		    _analogWrite( _leftM.pinVel,  160 );
+
+		    await 300ms;
+
 		    _analogWrite( _rightM.pinVel, 0 );
 		    _analogWrite( _leftM.pinVel,  0 );
+
+		    _myservo.write(servoPos);
+		    await 200ms;
+		    sideDistance = _turnSonar.ping()/_US_ROUNDTRIP_CM;
+		    await 50ms;
+		    servoPos = 180;
+		    _myservo.write(servoPos);
+		    await 1s;
+		    _digitalWrite( _rightM.pinWay, _HIGH );
+		    _digitalWrite( _leftM.pinWay, _HIGH );
+		    if sideDistance > _turnSonar.ping()/_US_ROUNDTRIP_CM then
+		    	_digitalWrite( _rightM.pinWay, _HIGH );
+		    	_digitalWrite( _leftM.pinWay, _LOW );
+		    else
+		    	_digitalWrite( _rightM.pinWay, _LOW );
+		    	_digitalWrite( _leftM.pinWay, _HIGH );
+		    end
+
+		    _analogWrite( _rightM.pinVel, 200 );
+		    _analogWrite( _leftM.pinVel,  200 );
+
+		    await 200ms;
+
+		    _analogWrite( _rightM.pinVel, 0 );
+		    _analogWrite( _leftM.pinVel,  0 );
+
+		    servoPos = 0;
+		    _myservo.write(servoPos);
+		    await 500ms;
+		    _analogWrite( _rightM.pinVel, 0 );
+		    _analogWrite( _leftM.pinVel, 0 );
+		    _outputL = 0;
+		    _outputR = 0;
+		    counterR = 0;
+		    counterL = 0;
+		    _rightM.vel = 160;
+		    _leftM.vel = 160;
+		    await 1s;
 		end
 	    await 80ms;
 	end
-with
-	_myservo.attach(9);
-	var int servoPos = 0;
-	loop do
-		if servoPos < 180 then
-			servoPos = 180;
-			_myservo.write(servoPos);
-		else
-			servoPos = 0;
-			_myservo.write(servoPos);
-		end
-		await 1s;
-	end
-with
-	par do // DRIVER do ENCODER R
-		var int old = _LOW;
-		loop do
-			var int cur = _digitalRead( _ENCODER_PIN_R );
-			async(cur,old) do
-				if cur != old then
-					old = cur;
-					emit ENCODER_R => cur;
+with // DRIVER do ENCODER R
+	if distFromFWall > 60 then
+		par do 
+			var int old = _LOW;
+			loop do
+				var int cur = _digitalRead( _ENCODER_PIN_R );
+				async(cur,old) do
+					if cur != old then
+						old = cur;
+						emit ENCODER_R => cur;
+					end
 				end
+				await 5ms; //debouncing
 			end
-			await 5ms; //debouncing
-		end
-	with
-		loop do
-			var int cR = 0;
-			watching 300ms do
-				every ENCODER_R do
-					cR = cR + 1;
-					// _Serial.print("Encoder R: ");
-					// _Serial.println(c);
+		with
+			loop do
+				var int cR = 0;
+				watching 300ms do
+					every ENCODER_R do
+						cR = cR + 1;
+						// _Serial.print("Encoder R: ");
+						// _Serial.println(c);
+					end
 				end
+				counterR = cR;
+				_Serial.print("Counter R: ");
+				_Serial.println(counterR);
+
+				_inputR = counterR;
+				_pidR.Compute();
+				_rightM.vel = _outputR;
+
+				_Serial.print("OutputR: ");
+				_Serial.println(_outputR);
 			end
-			counterR = cR;
-			_Serial.print("Counter R: ");
-			_Serial.println(counterR);
-
-			_inputR = counterR;
-			_pidR.Compute();
-			_rightM.vel = _outputR;
-
-			_Serial.print("OutputR: ");
-			_Serial.println(_outputR);
 		end
 	end
-with
-	par do // DRIVER do ENCODER L
-		var int old = _LOW;
-		loop do
-			var int cur = _digitalRead( _ENCODER_PIN_L );
-			async(cur,old) do
-				if cur != old then
-					old = cur;
-					emit ENCODER_L => cur;
+with // DRIVER do ENCODER L
+	if distFromFWall > 60 then
+		par do 
+			var int old = _LOW;
+			loop do
+				var int cur = _digitalRead( _ENCODER_PIN_L );
+				async(cur,old) do
+					if cur != old then
+						old = cur;
+						emit ENCODER_L => cur;
+					end
 				end
+				await 5ms; //debouncing
 			end
-			await 5ms; //debouncing
-		end
-	with
-		loop do
-			var int cL = 0;
-			watching 300ms do
-				every ENCODER_L do
-					cL = cL + 1;
-					// _Serial.print("Encoder L: ");
-					// _Serial.println(c);
+		with
+			loop do
+				var int cL = 0;
+				watching 300ms do
+					every ENCODER_L do
+						cL = cL + 1;
+						// _Serial.print("Encoder L: ");
+						// _Serial.println(c);
+					end
 				end
+				counterL = cL;
+				_Serial.print("Counter L: ");
+				_Serial.println(counterL);
+
+				_inputL = counterL;
+				_pidL.Compute();
+				_leftM.vel = _outputL;
+
+				_Serial.print("OutputL: ");
+				_Serial.println(_outputL);
 			end
-			counterL = cL;
-			_Serial.print("Counter L: ");
-			_Serial.println(counterL);
-
-			_inputL = counterL;
-			_pidL.Compute();
-			_leftM.vel = _outputL;
-
-			_Serial.print("OutputL: ");
-			_Serial.println(_outputL);
 		end
 	end
-with
+with // FIRE CHECK
 	var bool fogo = false;
 	loop do
 		var int flameSensor = _analogRead(_FLAME);
@@ -180,8 +222,8 @@ with
 		if flameSensor > 100 or fogo then
 			fogo = true;
 			// _Serial.println("FOGO!");
-			_rightM.vel = 0;
-			_leftM.vel = 0;
+			_analogWrite( _rightM.pinVel, 0 );
+		    _analogWrite( _leftM.pinVel, 0 );
 			_analogWrite(_BUZZER_PIN, 100);
 		else
 			// _Serial.println("Tudo ok.");
