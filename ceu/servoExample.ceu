@@ -7,9 +7,12 @@ native do
 
 end
 
+_myservo.attach(9);
+
 var int pos = 0;
 
 loop do
+	
 	if pos < 180 then
 		pos = 180;
 		_myservo.write(pos);
@@ -17,5 +20,6 @@ loop do
 		pos = 0;
 		_myservo.write(pos);
 	end
-	await 1s;
+
+    await 1s;
 end
