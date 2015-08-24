@@ -24,9 +24,8 @@ par do
 		await 5ms; //debouncing
 	end
 with
-var int c = 0;
 	loop do
-		
+		var int c = 0;
 		watching 200ms do
 			every ENCODER do
 				c = c + 1;
