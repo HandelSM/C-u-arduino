@@ -1,6 +1,17 @@
 Cronograma
 =======================================================
 
+Dia 26/08
+
+* O que deveria fazer:
+	* Melhorar o PID.
+
+* O que fez:
+	* Consertei o erro no PID. Adicionei sons ao carrinho.
+
+* O que deve fazer:
+	* Soldar chave de liga e desliga. Buscar o labirinto. Se possível colocar um ou mais sensores de distância.
+
 Dia 24/08
 
 * O que deveria fazer:
