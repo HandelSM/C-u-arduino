@@ -1,6 +1,17 @@
 Cronograma
 =======================================================
 
+Dia 28/08
+
+* O que deveria fazer:
+	* Soldar chave de liga e desliga. Buscar o labirinto. Se possível colocar um ou mais sensores de distância.
+
+* O que fez:
+	* Trouxe os materiais para fazer o cubo de LED's e soldei a chave de liga e desliga.
+
+* O que deve fazer:
+	* Buscar o labirinto. Se possível colocar um ou mais sensores de distância. Começar o cubo de LED's.
+
 Dia 26/08
 
 * O que deveria fazer:
