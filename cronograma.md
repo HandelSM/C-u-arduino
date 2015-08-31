@@ -1,6 +1,16 @@
 Cronograma
 =======================================================
 
+Dia 31/08
+* O que deveria fazer:
+	* Buscar o labirinto. Se possível colocar um ou mais sensores de distância. Começar o cubo de LED's.
+
+* O que fez:
+	* Estudei sobre cubos de leds e fiz um esquemático para ajudar na construção.
+
+* O que deve fazer:
+	* Buscar o labirinto. Começar a soldar o cubo de LED's.
+
 Dia 28/08
 
 * O que deveria fazer:
