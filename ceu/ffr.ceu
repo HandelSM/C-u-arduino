@@ -47,7 +47,7 @@ var int counterR = 0;
 input bool ENCODER_L; 
 var int counterL = 0;
 
-var int minDist = 40;
+var int minDist = 20;
 
 var bool girando = false;
 
@@ -104,7 +104,7 @@ with
 			    _analogWrite( _rightM.pinVel, 160 );
 			    _analogWrite( _leftM.pinVel,  160 );
 
-			    await 300ms;
+			    await 100ms;
 
 			    _analogWrite( _rightM.pinVel, 0 );
 			    _analogWrite( _leftM.pinVel,  0 );
