@@ -1,6 +1,16 @@
 Cronograma
 =======================================================
 
+Dia 02/09
+* O que deveria fazer:
+	* Buscar o labirinto. Começar a soldar o cubo de LED's.
+
+* O que fez:
+	* Fiz uma tabua de madeira para ajudar na solda do cubo de LED's. Busquei o labirinto. Adicionei um novo sensor de distância.
+
+* O que deve fazer:
+	* Começar a soldar o cubo de LED's.
+
 Dia 31/08
 * O que deveria fazer:
 	* Buscar o labirinto. Se possível colocar um ou mais sensores de distância. Começar o cubo de LED's.
