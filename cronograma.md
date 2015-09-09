@@ -1,5 +1,24 @@
 Cronograma
 =======================================================
+Dia 09/09
+* O que deveria fazer:
+	* Começar a soldar o cubo de LED's.
+
+* O que fez:
+	* Comecei a soldar o cubo de LED's, quase terminei o primeiro plano.
+
+* O que deve fazer:
+	* Terminar o primeiro plano e fazer o segundo.
+
+Dia 04/09
+* O que deveria fazer:
+	* Começar a soldar o cubo de LED's.
+
+* O que fez:
+	* Fiz o código para o novo sensor de distância, porém ficou pior.
+
+* O que deve fazer:
+	* Começar a soldar o cubo de LED's.
 
 Dia 02/09
 * O que deveria fazer:
