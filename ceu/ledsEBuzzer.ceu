@@ -1,0 +1,115 @@
+#include "arduino.ceu"
+output int PIN10;
+output int PIN11;
+output int PIN13;
+
+native do
+	##define LED_PIN_1 10
+	##define LED_PIN_2 11
+	##define LED_PIN_3 13
+
+	##define BUZZER_PIN 3
+
+	bool girando = false;
+end
+
+class Buzzer with do
+	_analogWrite( _BUZZER_PIN, _rand() % 255 );
+	await (100 + (_rand() % 50)) ms;
+	_analogWrite( _BUZZER_PIN, 0 );
+	await (50 + (_rand() % 50)) ms;
+	_analogWrite( _BUZZER_PIN, _rand() % 255 );
+	await (100 + (_rand() % 50)) ms;
+	_analogWrite( _BUZZER_PIN, 0 );
+	await (50 + (_rand() % 50)) ms;
+	if _rand() % 10 > 5 then
+		_analogWrite( _BUZZER_PIN, _rand() % 255 );
+		await (100 + (_rand() % 50)) ms;
+	end
+	if _rand() % 10 > 5 then
+		_analogWrite( _BUZZER_PIN, 0 );
+		await (50 + (_rand() % 50)) ms;
+	end
+
+	if _rand() % 10 > 2 then
+		var int freq = _rand() % 255;
+		var int dFreq = 0;
+		loop do
+			if freq < 0 then
+				break;
+			end
+			_analogWrite( _BUZZER_PIN, freq );
+			await 30ms;
+
+			freq = freq - dFreq;
+			dFreq = dFreq + _rand() % 10 + 1;
+			_analogWrite( _BUZZER_PIN, 0 );
+			await 10ms;
+		end
+	end
+end
+
+class Blink with
+	var int pin;
+	var bool led;
+do
+	if not _girando then
+		_digitalWrite(this.pin, _HIGH);
+		if this.led then
+			await 1s;
+		else
+			await 500ms;
+		end
+	end
+
+	_digitalWrite(this.pin, _LOW);
+	if this.led then
+		await 1s;
+	else
+		await 500ms;
+	end
+	
+end
+
+var int distFromFWall = 0;
+var int minDist = 20;
+
+par do 
+	loop do
+		do Blink with
+			this.pin = _LED_PIN_1;
+			this.led = true;
+		end;
+	end
+with
+	loop do
+		do Blink with
+			this.pin = _LED_PIN_2;
+			this.led = false;
+		end;
+	end
+with
+	loop do
+		if distFromFWall > minDist then
+			_girando = false;
+		else
+			_girando = true;
+			do Buzzer;
+		end
+		await 100ms;
+	end
+with
+	loop do
+		do Blink with
+			this.pin = _LED_PIN_3;
+			this.led = false;
+		end;
+	end
+with
+	loop do 
+		distFromFWall = 40;
+		await 10s;
+		distFromFWall = 0;
+		await 3s;
+	end
+end
