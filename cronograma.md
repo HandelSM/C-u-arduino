@@ -1,5 +1,35 @@
 Cronograma
 =======================================================
+Dia 21/09
+* O que deveria fazer:
+	* Fazer o segundo plano.
+
+* O que fez:
+	* Terminei o segundo plano e quase terminei o terceiro. Fiz um código só com LED's e classes para achar o problema e não consegui.
+
+* O que deve fazer:
+	* Terminar o terceiro e começar o quarto e ver o problema com as classes.
+
+Dia 16/09
+* O que deveria fazer:
+	* Arrumar o problema com as classes.
+
+* O que fez:
+	* Tentei arrumar o problema com as classes e só achei mais bugs. Terminei o primeiro plano dos LED's.
+
+* O que deve fazer:
+	* Fazer o segundo plano.
+
+Dia 15/09
+* O que deveria fazer:
+	* Terminar o primeiro plano e fazer o segundo.
+
+* O que fez:
+	* Aprendi sobre classes em ceu e implementei algumas no código do FFR porém gerou bug's.
+
+* O que deve fazer:
+	* Arrumar o problema com as classes.
+
 Dia 09/09
 * O que deveria fazer:
 	* Começar a soldar o cubo de LED's.
