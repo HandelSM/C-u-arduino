@@ -1,0 +1,260 @@
+#include "arduino.ceu"
+
+native do
+	##include <PID_v1.h>
+		
+	double setpointR, outputR, inputR;
+	double setpointL, outputL, inputL;
+	PID pidR(&inputR, &outputR, &setpointR, 2, 3, 0, DIRECT);
+	PID pidL(&inputL, &outputL, &setpointL, 2, 3, 0, DIRECT);
+
+	##define BUZZER_PIN 3
+
+
+	##include <NewPing.h>
+	##define TRIGGER_PIN_T  10
+	##define ECHO_PIN_T     11
+	##define TRIGGER_PIN_F  12
+	##define ECHO_PIN_F     13
+	##define TRIGGER_PIN_F2  0
+	##define ECHO_PIN_F2     1
+	##define MAX_DISTANCE 200	
+	NewPing frontSonar(TRIGGER_PIN_F, ECHO_PIN_F, MAX_DISTANCE);
+	NewPing frontSonar2(TRIGGER_PIN_F2, ECHO_PIN_F2, MAX_DISTANCE);
+	//NewPing turnSonar(TRIGGER_PIN_T, ECHO_PIN_T, MAX_DISTANCE);
+	//int xxx[5];
+
+	##define ENCODER_PIN_R 2
+	##define ENCODER_PIN_L 8
+
+	typedef struct motor
+	{
+	  float vel;
+	  int pinVel;
+	  int pinWay;
+	};
+	typedef struct motor Motor;
+	Motor rightM = {0, 5, 4};
+	Motor leftM = {0, 6, 7};
+	bool girando = false;
+end
+
+
+_Serial.begin(9600);
+
+input bool ENCODER_L; 
+var int distFromFWall = 0;
+var int counterR = 0;
+var int counterL = 0;
+var int minDist = 20;
+//var bool girando = false;
+_setpointR = 20;
+_setpointL = _setpointR;
+_pidR.SetMode(_AUTOMATIC);
+_pidL.SetMode(_AUTOMATIC);
+
+class Buzzer with do
+	_analogWrite( _BUZZER_PIN, _rand() % 255 );
+	await (100 + (_rand() % 50)) ms;
+	_analogWrite( _BUZZER_PIN, 0 );
+	await (50 + (_rand() % 50)) ms;
+	_analogWrite( _BUZZER_PIN, _rand() % 255 );
+	await (100 + (_rand() % 50)) ms;
+	_analogWrite( _BUZZER_PIN, 0 );
+	await (50 + (_rand() % 50)) ms;
+	if _rand() % 10 > 5 then
+		_analogWrite( _BUZZER_PIN, _rand() % 255 );
+		await (100 + (_rand() % 50)) ms;
+	end
+	if _rand() % 10 > 5 then
+		_analogWrite( _BUZZER_PIN, 0 );
+		await (50 + (_rand() % 50)) ms;
+	end
+
+	if _rand() % 10 > 2 then
+		var int freq = _rand() % 255;
+		var int dFreq = 0;
+		loop do
+			if freq < 0 then
+				break;
+			end
+			_analogWrite( _BUZZER_PIN, freq );
+			await 30ms;
+
+			freq = freq - dFreq;
+			dFreq = dFreq + _rand() % 10 + 1;
+			_analogWrite( _BUZZER_PIN, 0 );
+			await 10ms;
+		end
+	end
+end
+
+class Encoder with
+	var int pin;
+	var bool dir;
+do
+	event int encoder;
+	par do 
+		var int old = _LOW;
+		loop do
+			var int cur = _digitalRead( this.pin );
+			
+			if cur != old then
+				old = cur;
+				emit encoder => cur;
+			end
+			await 5ms; //debouncing
+		end
+	with
+		loop do
+			var int c = 0;
+			watching 300ms do
+				every encoder do
+					c = c + 1;
+				end
+			end
+
+			if not _girando then
+				if this.dir then
+					_inputR = c;
+					_pidR.Compute();
+					_rightM.vel = _outputR;
+				else
+					_inputL = c;
+					_pidL.Compute();
+					_leftM.vel = _outputL;
+				end
+				// _Serial.println(c);
+			else
+				if this.dir then
+					_rightM.vel = 0;
+				else
+					_leftM.vel = 0;
+				end
+			end
+		end
+	end
+end
+
+par do
+	loop do
+		_digitalWrite( _rightM.pinWay, _HIGH );
+	    _digitalWrite( _leftM.pinWay, _HIGH );
+	    _analogWrite( _rightM.pinVel, _rightM.vel );
+	    _analogWrite( _leftM.pinVel,  _leftM.vel );
+		await 200ms;
+	end
+with
+	do Encoder with
+		this.pin = _ENCODER_PIN_R;
+		this.dir = true;
+	end;
+with
+	do Encoder with
+		this.pin = _ENCODER_PIN_L;
+		this.dir = false;
+	end;
+	/*var int pin = _ENCODER_PIN_L;
+	var bool dir = false;
+	event int encoder;
+	par do 
+		var int old = _LOW;
+		loop do
+			var int cur = _digitalRead( pin );
+			
+			if cur != old then
+				old = cur;
+				emit encoder => cur;
+			end
+			await 5ms; //debouncing
+		end
+	with
+		loop do
+			var int c = 0;
+			watching 300ms do
+				every encoder do
+					c = c + 1;
+				end
+			end
+
+			if not _girando then
+				if dir then
+					_inputR = c;
+					_pidR.Compute();
+					_rightM.vel = _outputR;
+				else
+					_inputL = c;
+					_pidL.Compute();
+					_leftM.vel = _outputL;
+				end
+				// _Serial.println(c);
+			else
+				if dir then
+					_rightM.vel = 0;
+				else
+					_leftM.vel = 0;
+				end
+			end
+		end
+	end*/
+with
+	loop do
+		if distFromFWall > minDist then
+			_girando = false;
+			do Buzzer;
+		else
+			_girando = true;
+		end
+		await 100ms;
+	end
+with
+	loop do 
+		distFromFWall = 0;
+		await 5s;
+		distFromFWall = 30;
+		await 5s;
+	end
+/*with
+	loop do
+		_Serial.println(_inputR);
+		await 200ms;
+	end
+with
+	loop i in 5 do
+		await 1s;
+		//_xxx[i] = (int)_digitalRead(2);
+		await 1s;
+		//_digitalWrite(12, _xxx[i]);
+	end*/
+end
+
+
+
+/*with
+	do Encoder with
+		this.pin = _ENCODER_PIN_L;
+		this.dir = false;
+	end;
+with
+	loop do
+		if distFromFWall > minDist then
+			_girando = false;
+			// do Buzzer;
+		else
+			_girando = true;
+		end
+		await 100ms;
+	end
+with
+	loop do
+		_Serial.println(_inputR);
+		await 200ms;
+	end
+with
+	loop i in 5 do
+		await 1s;
+		//_xxx[i] = (int)_digitalRead(2);
+		await 1s;
+		//_digitalWrite(12, _xxx[i]);
+	end
+end*/
