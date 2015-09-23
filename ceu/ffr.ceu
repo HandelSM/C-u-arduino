@@ -39,32 +39,107 @@ native do
 	typedef struct motor Motor;
 	Motor rightM = {0, 5, 4};
 	Motor leftM = {0, 6, 7};
+
+	bool girando = false;
 end
 
-// _Serial.begin(115200);
 
 var int distFromFWall = 0;
-
-input bool ENCODER_R;
-var int counterR = 0;
-input bool ENCODER_L; 
-var int counterL = 0;
-
+input int ENCODER_R;
+input int ENCODER_L;
 var int minDist = 20;
-
-var bool girando = false;
-
+//var bool girando = false;
 _setpointR = 25;
 _setpointL = _setpointR;
 _pidR.SetMode(_AUTOMATIC);
 _pidL.SetMode(_AUTOMATIC);
-
 _analogWrite(_BUZZER_PIN, 100);
 await 200ms;
 _analogWrite(_BUZZER_PIN, 0);
-
-
 var bool fogo = false;
+
+class Encoder with
+	var int pin;
+	var bool dir;
+	//var bool& girando;
+do
+	event int encoder;
+	par do 
+		var int old = _LOW;
+		loop do
+			var int cur = _digitalRead( this.pin );
+			
+			if cur != old then
+				old = cur;
+				emit encoder => cur;
+			end
+			await 5ms; //debouncing
+		end
+	with
+		loop do
+			var int c = 0;
+			watching 300ms do
+				every encoder do
+					c = c + 1;
+				end
+			end
+
+			if not _girando then
+				if this.dir then
+					_inputR = c;
+					_pidR.Compute();
+					_rightM.vel = _outputR;
+				else
+					_inputL = c;
+					_pidL.Compute();
+					_leftM.vel = _outputL;
+				end
+			end
+		end
+	end
+end
+
+
+class Buzzer with do
+	_analogWrite( _BUZZER_PIN, _rand() % 255 );
+	await (100 + (_rand() % 50)) ms;
+	_analogWrite( _BUZZER_PIN, 0 );
+	await (50 + (_rand() % 50)) ms;
+	_analogWrite( _BUZZER_PIN, _rand() % 255 );
+	await (100 + (_rand() % 50)) ms;
+	_analogWrite( _BUZZER_PIN, 0 );
+	await (50 + (_rand() % 50)) ms;
+	if _rand() % 10 > 5 then
+		_analogWrite( _BUZZER_PIN, _rand() % 255 );
+		await (100 + (_rand() % 50)) ms;
+	end
+	if _rand() % 10 > 5 then
+		_analogWrite( _BUZZER_PIN, 0 );
+		await (50 + (_rand() % 50)) ms;
+	end
+
+	if _rand() % 10 > 2 then
+		var int freq = _rand() % 255;
+		var int dFreq = 0;
+		loop do
+			if freq < 0 then
+				break;
+			end
+			_analogWrite( _BUZZER_PIN, freq );
+			await 30ms;
+
+			freq = freq - dFreq;
+			dFreq = dFreq + _rand() % 10 + 1;
+			_analogWrite( _BUZZER_PIN, 0 );
+			await 10ms;
+		end
+	end
+end
+
+
+
+// _Serial.begin(115200);
+
 
 par do // Calcular distancia da parede
 	loop do
@@ -93,8 +168,10 @@ with
 			    _digitalWrite( _leftM.pinWay, _HIGH );
 			    _analogWrite( _rightM.pinVel, _rightM.vel );
 			    _analogWrite( _leftM.pinVel,  _leftM.vel );
+			    await 80ms;
 			else
-				girando = true;
+				_girando = true;
+
 
 				_analogWrite( _rightM.pinVel, 0 );
 			    _analogWrite( _leftM.pinVel,  0 );
@@ -111,39 +188,7 @@ with
 			    _analogWrite( _rightM.pinVel, 0 );
 			    _analogWrite( _leftM.pinVel,  0 );
 
-			    _analogWrite( _BUZZER_PIN, _rand() % 255 );
-				await (100 + (_rand() % 50)) ms;
-				_analogWrite( _BUZZER_PIN, 0 );
-				await (50 + (_rand() % 50)) ms;
-				_analogWrite( _BUZZER_PIN, _rand() % 255 );
-				await (100 + (_rand() % 50)) ms;
-				_analogWrite( _BUZZER_PIN, 0 );
-				await (50 + (_rand() % 50)) ms;
-				if _rand() % 10 > 5 then
-					_analogWrite( _BUZZER_PIN, _rand() % 255 );
-					await (100 + (_rand() % 50)) ms;
-				end
-				if _rand() % 10 > 5 then
-					_analogWrite( _BUZZER_PIN, 0 );
-					await (50 + (_rand() % 50)) ms;
-				end
-
-				if _rand() % 10 > 2 then
-					var int freq = _rand() % 255;
-					var int dFreq = 0;
-					loop do
-						if freq < 0 then
-							break;
-						end
-						_analogWrite( _BUZZER_PIN, freq );
-						await 30ms;
-
-						freq = freq - dFreq;
-						dFreq = dFreq + _rand() % 10 + 1;
-						_analogWrite( _BUZZER_PIN, 0 );
-						await 10ms;
-					end
-				end
+			    do Buzzer;
 
 			    _myservo.write(servoPos);
 			    await 200ms;
@@ -177,100 +222,32 @@ with
 			    _analogWrite( _leftM.pinVel, 0 );
 			    _outputL = 0;
 			    _outputR = 0;
-			    counterR = 0;
-			    counterL = 0;
 			    _rightM.vel = 0;
 			    _leftM.vel = 0;
 			    await 1s;
-			    girando =false;
+			    _girando =false;
 			end
-		    await 80ms;
 		else
 			break;
 		end
 	end
 with // DRIVER do ENCODER R
-	par do 
-		var int old = _LOW;
-		loop do
-			var int cur = _digitalRead( _ENCODER_PIN_R );
-			async(cur,old) do
-				if cur != old then
-					old = cur;
-					emit ENCODER_R => cur;
-				end
-			end
-			await 5ms; //debouncing
-		end
-	with
-		loop do
-			var int cR = 0;
-			watching 300ms do
-				every ENCODER_R do
-					cR = cR + 1;
-					// _Serial.print("Encoder R: ");
-					// _Serial.println(c);
-				end
-			end
-			counterR = cR;
-
-			// _Serial.println(distFromFWall);
-			// _Serial.print("Counter R: ");
-			// _Serial.println(counterR);
-
-		
-			if not girando then
-				_inputR = counterR;
-				_pidR.Compute();
-				_rightM.vel = _outputR;
-			end
-			// _Serial.print("OutputR: ");
-			// _Serial.println(_outputR);
-		end
-	end
+	do Encoder with 
+		this.pin = _ENCODER_PIN_R;
+		this.dir = true;
+		//this.girando = &girando;
+	end;
 with // DRIVER do ENCODER L
-	par do 
-		var int old = _LOW;
-		loop do
-			var int cur = _digitalRead( _ENCODER_PIN_L );
-			async(cur,old) do
-				if cur != old then
-					old = cur;
-					emit ENCODER_L => cur;
-				end
-			end
-			await 5ms; //debouncing
-		end
-	with
-		loop do
-			var int cL = 0;
-			watching 300ms do
-				every ENCODER_L do
-					cL = cL + 1;
-					// _Serial.print("Encoder L: ");
-					// _Serial.println(c);
-				end
-			end
-			counterL = cL;
-
-			// _Serial.print("Counter L: ");
-			// _Serial.println(counterL);
-
-			if not girando then
-				_inputL = counterL;
-				_pidL.Compute();
-				_leftM.vel = _outputL;
-			end
-
-			// _Serial.print("OutputL: ");
-			// _Serial.println(_outputL);
-		end
-	end
+	do Encoder with 
+		this.pin = _ENCODER_PIN_L;
+		this.dir = false;
+		//this.girando = &girando;
+	end;
 with // FIRE CHECK
 	loop do
 		var int flameSensor = _analogRead(_FLAME);
 
-		if flameSensor > 100 or fogo then
+		if flameSensor > 300 or fogo then
 			fogo = true;
 			// _Serial.println("FOGO!");
 			_analogWrite( _rightM.pinVel, 0 );
