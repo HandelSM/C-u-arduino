@@ -1,5 +1,15 @@
 Cronograma
 =======================================================
+Dia 23/09
+* O que deveria fazer:
+	* Terminar o terceiro e começar o quarto planos e ver o problema com as classes.
+
+* O que fez:
+	* Resolvemos o problema com as classes e refiz o codigo ffr.ceu com classes, porem ainda contem alguns bugs.
+
+* O que deve fazer:
+	* Consertar os Bugs do codigo e soldar o que conseguir. 
+
 Dia 21/09
 * O que deveria fazer:
 	* Fazer o segundo plano.
