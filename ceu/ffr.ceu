@@ -1,5 +1,16 @@
 #include "arduino.ceu"
 #define FFR
+#define TRIGGER_PIN_T  10
+#define ECHO_PIN_T     11
+#define TRIGGER_PIN_F  12
+#define ECHO_PIN_F     13
+#define TRIGGER_PIN_F2  0
+#define ECHO_PIN_F2     1
+#define MAX_DISTANCE 200
+#define ENCODER_PIN_R 2
+#define ENCODER_PIN_L 8
+#define FLAME A0
+#define BUZZER_PIN 3
 
 native do
 	##include <PID_v1.h>
@@ -9,26 +20,13 @@ native do
 	PID pidL(&inputL, &outputL, &setpointL, 2, 3, 0, DIRECT);
 
 	##include <NewPing.h>
-	##define TRIGGER_PIN_T  10
-	##define ECHO_PIN_T     11
-	##define TRIGGER_PIN_F  12
-	##define ECHO_PIN_F     13
-	##define TRIGGER_PIN_F2  0
-	##define ECHO_PIN_F2     1
-	##define MAX_DISTANCE 200	
+		
 	NewPing frontSonar(TRIGGER_PIN_F, ECHO_PIN_F, MAX_DISTANCE);
 	NewPing frontSonar2(TRIGGER_PIN_F2, ECHO_PIN_F2, MAX_DISTANCE);
 	NewPing turnSonar(TRIGGER_PIN_T, ECHO_PIN_T, MAX_DISTANCE);
 
 	##include <Servo.h> 
 	Servo myservo;
-	
-	##define ENCODER_PIN_R 2
-	##define ENCODER_PIN_L 8
-
-	##define FLAME A0
-
-	##define BUZZER_PIN 3
 
 	typedef struct motor
 	{
@@ -37,31 +35,26 @@ native do
 	  int pinWay;
 	};
 	typedef struct motor Motor;
+
 	Motor rightM = {0, 5, 4};
 	Motor leftM = {0, 6, 7};
-
-	bool girando = false;
 end
 
-
-var int distFromFWall = 0;
 input int ENCODER_R;
 input int ENCODER_L;
-var int minDist = 20;
-//var bool girando = false;
 _setpointR = 25;
 _setpointL = _setpointR;
 _pidR.SetMode(_AUTOMATIC);
 _pidL.SetMode(_AUTOMATIC);
-_analogWrite(_BUZZER_PIN, 100);
+_myservo.attach(9);
+
+_analogWrite(BUZZER_PIN, 100);
 await 200ms;
-_analogWrite(_BUZZER_PIN, 0);
-var bool fogo = false;
+_analogWrite(BUZZER_PIN, 0);
 
 class Encoder with
 	var int pin;
 	var bool dir;
-	//var bool& girando;
 do
 	event int encoder;
 	par do 
@@ -84,37 +77,38 @@ do
 				end
 			end
 
-			if not _girando then
-				if this.dir then
-					_inputR = c;
-					_pidR.Compute();
-					_rightM.vel = _outputR;
-				else
-					_inputL = c;
-					_pidL.Compute();
-					_leftM.vel = _outputL;
-				end
+			
+			if this.dir then
+				_inputR = c;
+				_pidR.Compute();
+				_rightM.vel = _outputR;
+			else
+				_inputL = c;
+				_pidL.Compute();
+				_leftM.vel = _outputL;
 			end
 		end
 	end
 end
 
-
 class Buzzer with do
-	_analogWrite( _BUZZER_PIN, _rand() % 255 );
+	finalize with
+		_analogWrite( BUZZER_PIN, 0 );
+	end
+	_analogWrite( BUZZER_PIN, _rand() % 255 );
 	await (100 + (_rand() % 50)) ms;
-	_analogWrite( _BUZZER_PIN, 0 );
+	_analogWrite( BUZZER_PIN, 0 );
 	await (50 + (_rand() % 50)) ms;
-	_analogWrite( _BUZZER_PIN, _rand() % 255 );
+	_analogWrite( BUZZER_PIN, _rand() % 255 );
 	await (100 + (_rand() % 50)) ms;
-	_analogWrite( _BUZZER_PIN, 0 );
+	_analogWrite( BUZZER_PIN, 0 );
 	await (50 + (_rand() % 50)) ms;
 	if _rand() % 10 > 5 then
-		_analogWrite( _BUZZER_PIN, _rand() % 255 );
+		_analogWrite( BUZZER_PIN, _rand() % 255 );
 		await (100 + (_rand() % 50)) ms;
 	end
 	if _rand() % 10 > 5 then
-		_analogWrite( _BUZZER_PIN, 0 );
+		_analogWrite( BUZZER_PIN, 0 );
 		await (50 + (_rand() % 50)) ms;
 	end
 
@@ -125,139 +119,159 @@ class Buzzer with do
 			if freq < 0 then
 				break;
 			end
-			_analogWrite( _BUZZER_PIN, freq );
+			_analogWrite( BUZZER_PIN, freq );
 			await 30ms;
 
 			freq = freq - dFreq;
 			dFreq = dFreq + _rand() % 10 + 1;
-			_analogWrite( _BUZZER_PIN, 0 );
+			_analogWrite( BUZZER_PIN, 0 );
 			await 10ms;
 		end
 	end
 end
 
-
-
-// _Serial.begin(115200);
-
-
-par do // Calcular distancia da parede
-	loop do
-		var int testDistF = _frontSonar.ping()/_US_ROUNDTRIP_CM;
-		var int testDistF2 = _frontSonar2.ping()/_US_ROUNDTRIP_CM;
-		if testDistF > 0 and testDistF2 > 0 then
-			if testDistF < testDistF2 then
-				distFromFWall = testDistF;
-			else
-				distFromFWall = testDistF2;
-			end
-		  	// _Serial.print("Ping: ");
-		  	// _Serial.print(distFromFWall);
-		  	// _Serial.println("cm");
+class VerifyDist with do
+	var int minDist = 20;
+	var int distFromFWall;
+	var int testDistF = _frontSonar.ping()/_US_ROUNDTRIP_CM;
+	var int testDistF2 = _frontSonar2.ping()/_US_ROUNDTRIP_CM;
+	if testDistF > 0 and testDistF2 > 0 then
+		if testDistF < testDistF2 then
+			distFromFWall = testDistF;
+		else
+			distFromFWall = testDistF2;
 		end
-		await 50ms;
-	end 
-with
-	_myservo.attach(9);
+	  	// _Serial.print("Ping: ");
+	  	// _Serial.print(distFromFWall);
+	  	// _Serial.println("cm");
+	  	if distFromFWall < minDist then
+	  		escape 0;
+		end
+	end
+	await 50ms;
+end
+
+class GoFoward with do
+	finalize with
+	    _digitalWrite( _rightM.pinWay, _HIGH );
+	    _digitalWrite( _leftM.pinWay, _HIGH );
+	    _analogWrite( _rightM.pinVel, 0 );
+	    _analogWrite( _leftM.pinVel,  0 );
+	end
+
+	var Encoder _ with
+		this.pin = ENCODER_PIN_R;
+		this.dir = true;
+	end;
+
+	var Encoder _ with
+		this.pin = ENCODER_PIN_L;
+		this.dir = false;
+	end;
+
+	every 80ms do
+		_digitalWrite( _rightM.pinWay, _HIGH );
+	    _digitalWrite( _leftM.pinWay, _HIGH );
+	    _analogWrite( _rightM.pinVel, _rightM.vel );
+	    _analogWrite( _leftM.pinVel,  _leftM.vel );
+    end	
+end
+
+class Turn with do
+	finalize with
+	    _digitalWrite( _rightM.pinWay, _HIGH );
+	    _digitalWrite( _leftM.pinWay, _HIGH );
+	    _analogWrite( _rightM.pinVel, 0 );
+	    _analogWrite( _leftM.pinVel,  0 );
+	end
+
 	var int servoPos = 0;
 	var int sideDistance;
-	loop do
-		if not fogo then
-			if distFromFWall > minDist then
-				_digitalWrite( _rightM.pinWay, _HIGH );
-			    _digitalWrite( _leftM.pinWay, _HIGH );
-			    _analogWrite( _rightM.pinVel, _rightM.vel );
-			    _analogWrite( _leftM.pinVel,  _leftM.vel );
-			    await 80ms;
-			else
-				_girando = true;
+
+	_analogWrite( _rightM.pinVel, 0 );
+    _analogWrite( _leftM.pinVel,  0 );
+
+    await 50ms;
+
+	_digitalWrite( _rightM.pinWay, _LOW );
+    _digitalWrite( _leftM.pinWay, _LOW );
+    _analogWrite( _rightM.pinVel, 160 );
+    _analogWrite( _leftM.pinVel,  160 );
+
+    await 100ms;
+
+    _analogWrite( _rightM.pinVel, 0 );
+    _analogWrite( _leftM.pinVel,  0 );
+
+    do Buzzer;
+
+    _myservo.write(servoPos);
+    await 200ms;
+    sideDistance = _turnSonar.ping()/_US_ROUNDTRIP_CM;
+    await 50ms;
+    servoPos = 180;
+    _myservo.write(servoPos);
+    await 1s;
+    _digitalWrite( _rightM.pinWay, _HIGH );
+    _digitalWrite( _leftM.pinWay, _HIGH );
+    if sideDistance > _turnSonar.ping()/_US_ROUNDTRIP_CM then
+    	_digitalWrite( _rightM.pinWay, _HIGH );
+    	_digitalWrite( _leftM.pinWay, _LOW );
+    else
+    	_digitalWrite( _rightM.pinWay, _LOW );
+    	_digitalWrite( _leftM.pinWay, _HIGH );
+    end
+
+    _analogWrite( _rightM.pinVel, 200 );
+    _analogWrite( _leftM.pinVel,  200 );
+
+    await 200ms;
+
+    _analogWrite( _rightM.pinVel, 0 );
+    _analogWrite( _leftM.pinVel,  0 );
+
+    servoPos = 0;
+    _myservo.write(servoPos);
+    await 500ms;
+    _analogWrite( _rightM.pinVel, 0 );
+    _analogWrite( _leftM.pinVel, 0 );
+    /*_outputL = 0;
+    _outputR = 0;*/
+    await 1s;
+end
 
 
-				_analogWrite( _rightM.pinVel, 0 );
-			    _analogWrite( _leftM.pinVel,  0 );
+class FireCheck with
+do
+	var int flameSensor = _analogRead(0);
 
-			    await 50ms;
-
-				_digitalWrite( _rightM.pinWay, _LOW );
-			    _digitalWrite( _leftM.pinWay, _LOW );
-			    _analogWrite( _rightM.pinVel, 160 );
-			    _analogWrite( _leftM.pinVel,  160 );
-
-			    await 100ms;
-
-			    _analogWrite( _rightM.pinVel, 0 );
-			    _analogWrite( _leftM.pinVel,  0 );
-
-			    do Buzzer;
-
-			    _myservo.write(servoPos);
-			    await 200ms;
-			    sideDistance = _turnSonar.ping()/_US_ROUNDTRIP_CM;
-			    await 50ms;
-			    servoPos = 180;
-			    _myservo.write(servoPos);
-			    await 1s;
-			    _digitalWrite( _rightM.pinWay, _HIGH );
-			    _digitalWrite( _leftM.pinWay, _HIGH );
-			    if sideDistance > _turnSonar.ping()/_US_ROUNDTRIP_CM then
-			    	_digitalWrite( _rightM.pinWay, _HIGH );
-			    	_digitalWrite( _leftM.pinWay, _LOW );
-			    else
-			    	_digitalWrite( _rightM.pinWay, _LOW );
-			    	_digitalWrite( _leftM.pinWay, _HIGH );
-			    end
-
-			    _analogWrite( _rightM.pinVel, 200 );
-			    _analogWrite( _leftM.pinVel,  200 );
-
-			    await 200ms;
-
-			    _analogWrite( _rightM.pinVel, 0 );
-			    _analogWrite( _leftM.pinVel,  0 );
-
-			    servoPos = 0;
-			    _myservo.write(servoPos);
-			    await 500ms;
-			    _analogWrite( _rightM.pinVel, 0 );
-			    _analogWrite( _leftM.pinVel, 0 );
-			    _outputL = 0;
-			    _outputR = 0;
-			    _rightM.vel = 0;
-			    _leftM.vel = 0;
-			    await 1s;
-			    _girando =false;
-			end
-		else
-			break;
-		end
-	end
-with // DRIVER do ENCODER R
-	do Encoder with 
-		this.pin = _ENCODER_PIN_R;
-		this.dir = true;
-		//this.girando = &girando;
-	end;
-with // DRIVER do ENCODER L
-	do Encoder with 
-		this.pin = _ENCODER_PIN_L;
-		this.dir = false;
-		//this.girando = &girando;
-	end;
-with // FIRE CHECK
-	loop do
-		var int flameSensor = _analogRead(_FLAME);
-
-		if flameSensor > 300 or fogo then
-			fogo = true;
-			// _Serial.println("FOGO!");
-			_analogWrite( _rightM.pinVel, 0 );
-		    _analogWrite( _leftM.pinVel, 0 );
-			_analogWrite(_BUZZER_PIN, 200);
-			await 250ms;
-			_analogWrite(_BUZZER_PIN, 70);
-			await 250ms;
-		else
-			await 300ms;
-		end
+	if flameSensor > 300 then
+		escape 0;
+	else
+		await 300ms;
 	end
 end
+
+class Apitar with
+do
+	loop do
+		_analogWrite(BUZZER_PIN, 200);
+		await 250ms;
+		_analogWrite(BUZZER_PIN, 70);
+		await 250ms;
+	end
+end
+
+var FireCheck fogo;
+watching fogo do
+	loop do
+		do
+			var VerifyDist perto;
+			watching perto do
+				do GoFoward;
+			end
+		end
+		do Turn;
+	end
+end
+do Apitar;
