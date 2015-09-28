@@ -1,0 +1,50 @@
+#define BUZZER_PIN 3
+
+class Buzzer with do
+	finalize with
+		_analogWrite( BUZZER_PIN, 0 );
+	end
+	_analogWrite( BUZZER_PIN, _rand() % 255 );
+	await (100 + (_rand() % 50)) ms;
+	_analogWrite( BUZZER_PIN, 0 );
+	await (50 + (_rand() % 50)) ms;
+	_analogWrite( BUZZER_PIN, _rand() % 255 );
+	await (100 + (_rand() % 50)) ms;
+	_analogWrite( BUZZER_PIN, 0 );
+	await (50 + (_rand() % 50)) ms;
+	if _rand() % 10 > 5 then
+		_analogWrite( BUZZER_PIN, _rand() % 255 );
+		await (100 + (_rand() % 50)) ms;
+	end
+	if _rand() % 10 > 5 then
+		_analogWrite( BUZZER_PIN, 0 );
+		await (50 + (_rand() % 50)) ms;
+	end
+
+	if _rand() % 10 > 2 then
+		var int freq = _rand() % 255;
+		var int dFreq = 0;
+		loop do
+			if freq < 0 then
+				break;
+			end
+			_analogWrite( BUZZER_PIN, freq );
+			await 30ms;
+
+			freq = freq - dFreq;
+			dFreq = dFreq + _rand() % 10 + 1;
+			_analogWrite( BUZZER_PIN, 0 );
+			await 10ms;
+		end
+	end
+end
+
+class Beep with
+do
+	loop do
+		_analogWrite(BUZZER_PIN, 200);
+		await 250ms;
+		_analogWrite(BUZZER_PIN, 70);
+		await 250ms;
+	end
+end

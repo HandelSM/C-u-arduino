@@ -1,0 +1,14 @@
+#define FLAME _A0
+
+class FireCheck with
+do
+	loop do
+		var int flameSensor = _analogRead(FLAME);
+
+		if flameSensor > 300 then
+			escape 0;
+		else
+			await 300ms;
+		end
+	end
+end

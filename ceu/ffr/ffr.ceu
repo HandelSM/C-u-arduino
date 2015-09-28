@@ -1,0 +1,22 @@
+#include "arduino.ceu"
+#include "verify_dist.ceu"
+#include "fire_check.ceu"
+#include "motor.ceu"
+
+_analogWrite(BUZZER_PIN, 100);
+await 200ms;
+_analogWrite(BUZZER_PIN, 0);
+
+var FireCheck fogo;
+watching fogo do
+	loop do
+		do
+			var VerifyDist perto;
+			watching perto do
+				do GoForward;
+			end
+		end
+		do Turn;
+	end
+end
+do Beep;

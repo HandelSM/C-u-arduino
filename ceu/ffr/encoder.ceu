@@ -1,0 +1,55 @@
+#define ENCODER_PIN_R 2
+#define ENCODER_PIN_L 8
+
+native do
+	##include <PID_v1.h>
+	double setpointR, outputR, inputR;
+	double setpointL, outputL, inputL;
+	PID pidR(&inputR, &outputR, &setpointR, 2, 3, 0, DIRECT);
+	PID pidL(&inputL, &outputL, &setpointL, 2, 3, 0, DIRECT);
+end
+
+
+_setpointR = 25;
+_setpointL = _setpointR;
+_pidR.SetMode(_AUTOMATIC);
+_pidL.SetMode(_AUTOMATIC);
+
+class Encoder with
+	var int pin;
+	var bool dir;
+do
+	event int encoder;
+	par do 
+		var int old = _LOW;
+		loop do
+			var int cur = _digitalRead( this.pin );
+			
+			if cur != old then
+				old = cur;
+				emit encoder => cur;
+			end
+			await 5ms; //debouncing
+		end
+	with
+		loop do
+			var int c = 0;
+			watching 300ms do
+				every encoder do
+					c = c + 1;
+				end
+			end
+
+			
+			if this.dir then
+				_inputR = c;
+				_pidR.Compute();
+				_rightM.vel = _outputR;
+			else
+				_inputL = c;
+				_pidL.Compute();
+				_leftM.vel = _outputL;
+			end
+		end
+	end
+end

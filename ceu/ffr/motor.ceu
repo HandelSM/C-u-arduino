@@ -1,0 +1,118 @@
+#include "encoder.ceu"
+#include "buzzer.ceu"
+#define TRIGGER_PIN_T  10
+#define ECHO_PIN_T     11
+
+native do
+
+	##include <NewPing.h>
+
+	NewPing turnSonar(TRIGGER_PIN_T, ECHO_PIN_T, MAX_DISTANCE);
+
+	##include <Servo.h> 
+	Servo myservo;
+
+	typedef struct motor
+	{
+	  float vel;
+	  int pinVel;
+	  int pinWay;
+	};
+	typedef struct motor Motor;
+
+	Motor rightM = {0, 5, 4};
+	Motor leftM = {0, 6, 7};
+end
+
+class GoForward with do
+	finalize with
+	    _digitalWrite( _rightM.pinWay, _HIGH );
+	    _digitalWrite( _leftM.pinWay, _HIGH );
+	    _analogWrite( _rightM.pinVel, 0 );
+	    _analogWrite( _leftM.pinVel,  0 );
+	end
+
+	var Encoder _ with
+		this.pin = ENCODER_PIN_R;
+		this.dir = true;
+	end;
+
+	var Encoder _ with
+		this.pin = ENCODER_PIN_L;
+		this.dir = false;
+	end;
+
+	every 80ms do
+		_digitalWrite( _rightM.pinWay, _HIGH );
+	    _digitalWrite( _leftM.pinWay, _HIGH );
+	    _analogWrite( _rightM.pinVel, _rightM.vel );
+	    _analogWrite( _leftM.pinVel,  _leftM.vel );
+    end	
+end
+
+
+
+_myservo.attach(9);
+
+class Turn with do
+	finalize with
+	    _digitalWrite( _rightM.pinWay, _HIGH );
+	    _digitalWrite( _leftM.pinWay, _HIGH );
+	    _analogWrite( _rightM.pinVel, 0 );
+	    _analogWrite( _leftM.pinVel,  0 );
+	end
+
+	var int servoPos = 0;
+	var int sideDistance;
+
+	_analogWrite( _rightM.pinVel, 0 );
+    _analogWrite( _leftM.pinVel,  0 );
+
+    await 50ms;
+
+	_digitalWrite( _rightM.pinWay, _LOW );
+    _digitalWrite( _leftM.pinWay, _LOW );
+    _analogWrite( _rightM.pinVel, 160 );
+    _analogWrite( _leftM.pinVel,  160 );
+
+    await 100ms;
+
+    _analogWrite( _rightM.pinVel, 0 );
+    _analogWrite( _leftM.pinVel,  0 );
+
+    do Buzzer;
+
+    _myservo.write(servoPos);
+    await 200ms;
+    sideDistance = _turnSonar.ping()/_US_ROUNDTRIP_CM;
+    await 50ms;
+    servoPos = 180;
+    _myservo.write(servoPos);
+    await 1s;
+    _digitalWrite( _rightM.pinWay, _HIGH );
+    _digitalWrite( _leftM.pinWay, _HIGH );
+    if sideDistance > _turnSonar.ping()/_US_ROUNDTRIP_CM then
+    	_digitalWrite( _rightM.pinWay, _HIGH );
+    	_digitalWrite( _leftM.pinWay, _LOW );
+    else
+    	_digitalWrite( _rightM.pinWay, _LOW );
+    	_digitalWrite( _leftM.pinWay, _HIGH );
+    end
+
+    _analogWrite( _rightM.pinVel, 200 );
+    _analogWrite( _leftM.pinVel,  200 );
+
+    await 200ms;
+
+    _analogWrite( _rightM.pinVel, 0 );
+    _analogWrite( _leftM.pinVel,  0 );
+
+    servoPos = 0;
+    _myservo.write(servoPos);
+    await 500ms;
+    _analogWrite( _rightM.pinVel, 0 );
+    _analogWrite( _leftM.pinVel, 0 );
+    /*_outputL = 0;
+    _outputR = 0;*/
+    await 1s;
+end
