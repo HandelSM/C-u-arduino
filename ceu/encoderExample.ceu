@@ -1,37 +1,54 @@
 #include "arduino.ceu"
-
-native do
-	##define ENCODER_PIN 2
-end
-
-input bool ENCODER;
+#define ENCODER_PIN_R 2
+#define ENCODER_PIN_L 8
 
 _Serial.begin(9600);
 
 var int counter = 0;
 
-par do
-	// DRIVER do ENCODER
-	var int old = _LOW;
-	loop do
-		var int cur = _digitalRead( _ENCODER_PIN );
-		async(cur,old) do
+class Encoder with
+	var int pin;
+	var bool dir;
+do
+	event int encoder;
+	par do
+		var int old = _LOW;
+		loop do
+			var int cur = _digitalRead( this.pin );
+			
 			if cur != old then
 				old = cur;
-				emit ENCODER => cur;
+				emit encoder => cur;
+			end
+			await 5ms; //debouncing
+		end
+	with
+		loop do
+			var int c = 0;
+			watching 300ms do
+				every encoder do
+					c = c + 1;
+					if this.dir then
+						_Serial.print("Direita: ");
+					else
+						_Serial.print("Esquerda: ");
+					end
+					_Serial.println(c);
+				end
 			end
 		end
-		await 5ms; //debouncing
 	end
-with
-	loop do
-		var int c = 0;
-		watching 200ms do
-			every ENCODER do
-				c = c + 1;
-				_Serial.println(c);
-			end
-		end
-		counter = c;
-	end
+
 end
+
+var Encoder _ with
+	this.pin = ENCODER_PIN_R;
+	this.dir = true;
+end;
+
+var Encoder _ with
+	this.pin = ENCODER_PIN_L;
+	this.dir = false;
+end;
+
+await FOREVER;
