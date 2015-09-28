@@ -1,5 +1,26 @@
 Cronograma
 =======================================================
+
+Dia 28/09
+* O que deveria fazer:
+	* Corrigir bugs do codigo do FFR.
+
+* O que fez:
+	* Corrigi totos os bugs do codigo do FFR, agora funciona como antes, porem com classes e modularizado.
+
+* O que deve fazer:
+	* Soldar cubo de LED`s.
+
+Dia 25/09
+* O que deveria fazer:
+	* Consertar os Bugs do codigo e soldar o que conseguir.
+
+* O que fez:
+	* O codigo nao funcionou de primeira, fiz um codigo para testar a classe de verificar distancia.
+
+* O que deve fazer:
+	* Corrigir bugs do codigo do FFR.
+
 Dia 23/09
 * O que deveria fazer:
 	* Terminar o terceiro e começar o quarto planos e ver o problema com as classes.
