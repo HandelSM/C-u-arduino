@@ -1,42 +1,70 @@
 #include "arduino.ceu"
 #define FFR
-#define TRIGGER_PIN_F  12
+/*#define TRIGGER_PIN_F  12
 #define ECHO_PIN_F     13
 #define TRIGGER_PIN_F2  10
-#define ECHO_PIN_F2     11
-#define MAX_DISTANCE 300
+#define ECHO_PIN_F2     11*/
+/*#define TRIGGER_PIN_F1  12
+#define ECHO_PIN_F1     13*/
+#define TRIGGER_PIN_F2  0
+#define ECHO_PIN_F2     1
+// #define MAX_DISTANCE 300
+
+
 
 native do
 	##include <NewPing.h>
+
+	##define TRIGGER_PIN  0  // Arduino pin tied to trigger pin on the ultrasonic sensor.
+	##define ECHO_PIN     1  // Arduino pin tied to echo pin on the ultrasonic sensor.
+	##define MAX_DISTANCE 200 // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
+
+	NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); 
+
+end
+
+_Serial.begin(9600);
+
+loop do
+  	var int uS = _sonar.ping();
+  	_Serial.print("Ping: ");
+  	_Serial.print(uS / _US_ROUNDTRIP_CM); // Convert ping time to distance in cm and print result (0 = outside set distance range)
+  	_Serial.println("cm");
+	await 50ms;
+end
+
+
+/*native do
+	##include <NewPing.h>
 		
-	NewPing frontSonar(TRIGGER_PIN_F, ECHO_PIN_F, MAX_DISTANCE);
+	NewPing frontSonar(TRIGGER_PIN_F1, ECHO_PIN_F1, MAX_DISTANCE);
 	NewPing frontSonar2(TRIGGER_PIN_F2, ECHO_PIN_F2, MAX_DISTANCE);
 end
 
 _Serial.begin(9600);
 
 class VerifyDist with do
-	var int minDist = 20;
-	var int distFromFWall;
-	var int testDistF = _frontSonar.ping()/_US_ROUNDTRIP_CM;
-	var int testDistF2 = _frontSonar2.ping()/_US_ROUNDTRIP_CM;
-	// distFromFWall = testDistF2;
-	if testDistF > 0 and testDistF2 > 0 then
-		if testDistF < testDistF2 then
-			distFromFWall = testDistF;
-		else
-			distFromFWall = testDistF2;
+	loop do
+		var int minDist = 20;
+		var int distFromFWall = 1;
+		var int testDistF = _frontSonar.ping()/_US_ROUNDTRIP_CM;
+		var int testDistF2 = _frontSonar2.ping()/_US_ROUNDTRIP_CM;
+		// distFromFWall = testDistF2;
+		if testDistF > 0 and testDistF2 > 0 then
+			if testDistF < testDistF2 then
+				distFromFWall = testDistF;
+			else
+				distFromFWall = testDistF2;
+			end
+		  	if distFromFWall < minDist then
+		  		_Serial.println("PERTO!");
+			end
 		end
-	  	if distFromFWall < minDist then
-	  		_Serial.println("PERTO!");
-		end
+		_Serial.println(distFromFWall);
+		await 50ms;
 	end
-	_Serial.println(distFromFWall);
-	await 50ms;
 end
 
-loop do
-
-	do VerifyDist;
-
-end
+do VerifyDist;
+await FOREVER;
+*/
