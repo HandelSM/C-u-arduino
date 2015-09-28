@@ -1,13 +1,13 @@
 #include "arduino.ceu"
+#define ENCODER_PIN_R 2
+#define ENCODER_PIN_L 8
 
 native do
 	##include <PID_v1.h>
-		
-	double setpoint, output, input;
-
-	PID pid(&input, &output, &setpoint, 5, 3, 0, DIRECT);
-
-	##define ENCODER_PIN 2
+	double setpointR, outputR, inputR;
+	double setpointL, outputL, inputL;
+	PID pidR(&inputR, &outputR, &setpointR, 2, 3, 0, DIRECT);
+	PID pidL(&inputL, &outputL, &setpointL, 2, 3, 0, DIRECT);
 
 	typedef struct motor
 	{
@@ -16,59 +16,81 @@ native do
 	  int pinWay;
 	};
 	typedef struct motor Motor;
+
 	Motor rightM = {120, 5, 4};
-
-
+	Motor leftM = {120, 6, 7};
 end
 
-input bool ENCODER;
+// _Serial.begin(9600);
+_setpointR = 20;
+_setpointL = _setpointR;
+_pidR.SetMode(_AUTOMATIC);
+_pidL.SetMode(_AUTOMATIC);
 
-
-_Serial.begin(9600);
-
-var int counter = 0;
-
-_setpoint = 30;
-_pid.SetMode(_AUTOMATIC);
-
-par do
-	loop do
-		_digitalWrite( _rightM.pinWay, _HIGH );
-	    _analogWrite( _rightM.pinVel, _rightM.vel );
-		await 1s;
-	end
-with
+class Encoder with
+	var int pin;
+	var bool dir;
+do
+	event int encoder;
 	par do
-		// DRIVER do ENCODER
 		var int old = _LOW;
 		loop do
-			var int cur = _digitalRead( _ENCODER_PIN );
-			async(cur,old) do
-				if cur != old then
-					old = cur;
-					emit ENCODER => cur;
-				end
+			var int cur = _digitalRead( this.pin );
+			
+			if cur != old then
+				old = cur;
+				emit encoder => cur;
 			end
 			await 5ms; //debouncing
-		end		
+		end
 	with
 		loop do
 			var int c = 0;
-			watching 200ms do
-				every ENCODER do
+			watching 300ms do
+				every encoder do
 					c = c + 1;
 				end
 			end
-			counter = c;
-			_Serial.print("Counter: ");
-			_Serial.println(counter);
 
-			_input = counter;
-			_pid.Compute();
-			_rightM.vel = _output;
-
-			_Serial.print("Output: ");
-			_Serial.println(_output);
+			if this.dir then
+				_inputR = c;
+				_pidR.Compute();
+				_rightM.vel = _outputR;
+			else
+				_inputL = c;
+				_pidL.Compute();
+				_leftM.vel = _outputL;
+			end
 		end
 	end
+end
+
+class GoFoward with do
+	finalize with
+	    _digitalWrite( _rightM.pinWay, _HIGH );
+	    _digitalWrite( _leftM.pinWay, _HIGH );
+	    _analogWrite( _rightM.pinVel, 0 );
+	    _analogWrite( _leftM.pinVel,  0 );
+	end
+
+	var Encoder _ with
+		this.pin = ENCODER_PIN_R;
+		this.dir = true;
+	end;
+
+	var Encoder _ with
+		this.pin = ENCODER_PIN_L;
+		this.dir = false;
+	end;
+
+	every 80ms do
+		_digitalWrite( _rightM.pinWay, _HIGH );
+	    _digitalWrite( _leftM.pinWay, _HIGH );
+	    _analogWrite( _rightM.pinVel, _rightM.vel );
+	    _analogWrite( _leftM.pinVel,  _leftM.vel );
+    end	
+end
+
+loop do
+	do GoFoward;
 end
