@@ -1,12 +1,22 @@
 Cronograma
 =======================================================
 
+Dia 30/09
+* O que deveria fazer:
+	* Soldar cubo de LED`s.
+
+* O que fez:
+	* Soldei um cubo 3x3x3 e soldei um plano do 5x5x5(agora faltam 2).
+ 
+* O que deve fazer:
+	* Colocar o cubo 3x3x3 para funcionar.
+ 
 Dia 28/09
 * O que deveria fazer:
 	* Corrigir bugs do codigo do FFR.
 
 * O que fez:
-	* Corrigi totos os bugs do codigo do FFR, agora funciona como antes, porem com classes e modularizado.
+	* Corrigi todos os bugs do codigo do FFR, agora funciona como antes, porem com classes e modularizado.
 
 * O que deve fazer:
 	* Soldar cubo de LED`s.
