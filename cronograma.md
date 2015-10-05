@@ -1,6 +1,16 @@
 Cronograma
 =======================================================
 
+Dia 5/10
+* O que deveria fazer:
+	* Colocar o cubo 3x3x3 para funcionar.
+
+* O que fez:
+	* Soldei um plano do cubo 5x5x5, nao trouxe os materiais para fazer o cubo 3x3x3 funcionar.
+ 
+* O que deve fazer:
+	* Colocar o cubo 3x3x3 para funcionar.
+
 Dia 30/09
 * O que deveria fazer:
 	* Soldar cubo de LED`s.
