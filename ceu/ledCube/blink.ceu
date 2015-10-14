@@ -1,0 +1,84 @@
+#include "arduino.ceu"
+#define SIZE 3
+#define COLS SIZE*SIZE
+
+_pinMode(2, _OUTPUT);
+_pinMode(3, _OUTPUT);
+_pinMode(4, _OUTPUT);
+_pinMode(5, _OUTPUT);
+_pinMode(6, _OUTPUT);
+_pinMode(7, _OUTPUT);
+_pinMode(8, _OUTPUT);
+_pinMode(9, _OUTPUT);
+_pinMode(10, _OUTPUT);
+_pinMode(11, _OUTPUT);
+_pinMode(12, _OUTPUT);
+_pinMode(13, _OUTPUT);
+
+class Light with
+	var int col;
+	var int level;
+do
+	_digitalWrite(col, _HIGH);
+	_digitalWrite(level, _HIGH);
+end
+
+class TurnOff with
+	var int col;
+	var int level;
+do
+	_digitalWrite(col, _LOW);
+	_digitalWrite(level, _LOW);
+end
+
+class Blink with
+	var int col;
+	var int level;
+	var int timeOn;
+	var int timeOff;
+do
+	do Light with
+		this.col = col;
+		this.level = level;
+	end;
+
+	await (timeOn)ms;
+
+	do TurnOff with
+		this.col = col;
+		this.level = level;
+	end;
+	await (timeOff)ms;
+end
+
+par do
+	loop do 
+
+		do Blink with
+			this.col = 2;
+			this.level = 11;
+			this.timeOn = 250;
+			this.timeOff = 750;
+		end;
+	end
+with
+	await 250ms;
+	loop do 
+		do Blink with
+			this.col = 6;
+			this.level = 12;
+			this.timeOn = 250;
+			this.timeOff = 250;
+		end;
+	end
+with
+	await 500ms;
+	loop do
+		do Blink with
+			this.col = 10;
+			this.level = 13;
+			this.timeOn = 250;
+			this.timeOff = 750;
+		end;
+	end
+end
