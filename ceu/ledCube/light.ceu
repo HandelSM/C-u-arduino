@@ -1,0 +1,48 @@
+#include "arduino.ceu"
+#define SIZE 3
+#define COLS SIZE*SIZE
+
+native do
+	byte levelPins[SIZE] = {11,12,13};
+	byte colPins[COLS] = {2,3,4,5,6,7,8,9,10};
+end
+
+_Serial.begin(9600);
+
+loop i in 12 do
+	_pinMode(i+2, _OUTPUT);
+end
+
+loop i in 9 do
+	_digitalWrite(_colPins[i], _HIGH);
+end
+
+class Light with
+	var int level;
+do
+	_digitalWrite(_levelPins[level], _HIGH);
+end
+
+class Off  with
+        var int level;
+do
+        _digitalWrite(_levelPins[level], _LOW);
+end
+
+var int speed = 2000;
+var int i = 0;
+loop i do
+	if _Serial.available() > 0 then
+		var int novo = _Serial.parseInt();
+		if novo != speed then
+			speed = novo;
+			_Serial.println(speed);
+		end
+	end
+
+	_digitalWrite(_levelPins[i%3], _HIGH);
+
+	await (speed)ms;
+	
+        _digitalWrite(_levelPins[i%3], _LOW);
+end
