@@ -2,83 +2,49 @@
 #define SIZE 3
 #define COLS SIZE*SIZE
 
-_pinMode(2, _OUTPUT);
-_pinMode(3, _OUTPUT);
-_pinMode(4, _OUTPUT);
-_pinMode(5, _OUTPUT);
-_pinMode(6, _OUTPUT);
-_pinMode(7, _OUTPUT);
-_pinMode(8, _OUTPUT);
-_pinMode(9, _OUTPUT);
-_pinMode(10, _OUTPUT);
-_pinMode(11, _OUTPUT);
-_pinMode(12, _OUTPUT);
-_pinMode(13, _OUTPUT);
-
-class Light with
-	var int col;
-	var int level;
-do
-	_digitalWrite(col, _HIGH);
-	_digitalWrite(level, _HIGH);
+native do
+	##include <LedCube.h>
+	byte levelPins[SIZE] = {11,12,13};
+	byte colPins[COLS] = {2,3,4,5,6,7,8,9,10};
+	
+	bool on[SIZE][COLS];
 end
 
-class TurnOff with
-	var int col;
-	var int level;
-do
-	_digitalWrite(col, _LOW);
-	_digitalWrite(level, _LOW);
+loop i in SIZE do
+	loop j in COLS do
+		_on[i][j] = false;
+	end
 end
 
-class Blink with
-	var int col;
-	var int level;
-	var int timeOn;
-	var int timeOff;
-do
-	do Light with
-		this.col = col;
-		this.level = level;
-	end;
+//_Serial.begin(9600);
 
-	await (timeOn)ms;
-
-	do TurnOff with
-		this.col = col;
-		this.level = level;
-	end;
-	await (timeOff)ms;
+loop i in 12 do
+	_pinMode(i+2, _OUTPUT);
 end
 
 par do
-	loop do 
-
-		do Blink with
-			this.col = 2;
-			this.level = 11;
-			this.timeOn = 250;
-			this.timeOff = 750;
-		end;
-	end
-with
-	await 250ms;
-	loop do 
-		do Blink with
-			this.col = 6;
-			this.level = 12;
-			this.timeOn = 250;
-			this.timeOff = 250;
-		end;
-	end
-with
-	await 500ms;
 	loop do
-		do Blink with
-			this.col = 10;
-			this.level = 13;
-			this.timeOn = 250;
-			this.timeOff = 750;
-		end;
+		_on[2][8] = false;
+		_on[0][0] = true;
+		await 500ms;
+		_on[0][0] = false;
+		_on[1][4] = true;
+		await 500ms;
+		_on[1][4] = false;
+		_on[2][8] = true;
+		await 500ms;
+	end
+with
+	loop do
+		loop i in SIZE do
+			_digitalWrite(_levelPins[(i+2)%3], _LOW);
+			_digitalWrite(_levelPins[(i+1)%3], _LOW);
+			_digitalWrite(_levelPins[i%3], _HIGH);
+			loop j in COLS do
+				_digitalWrite(_colPins[j], _on[i%3][j]);
+			end
+			
+			await 6ms;
+		end
 	end
 end
