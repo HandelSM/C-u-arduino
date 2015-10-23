@@ -1,6 +1,14 @@
 Cronograma
 =======================================================
 
+Semana 19/10
+* O que deveria fazer:
+	* Colocar o cubo 3x3x3 para funcionar.
+* O que fez:
+	* Coloquei o cubo para funcionar em C e depois em ceu e fiz um codigo que faz um led "andar" pelo cubo por botoes.
+* O que deve fazer:
+	* Jogo snake para o cubo.
+
 Dia 5/10
 * O que deveria fazer:
 	* Colocar o cubo 3x3x3 para funcionar.
