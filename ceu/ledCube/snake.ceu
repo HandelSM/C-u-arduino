@@ -1,0 +1,201 @@
+#include "arduino.ceu"
+#define SIZE 3
+#define COLS SIZE*SIZE
+#define BPIN1 _A0
+#define BPIN2 _A1
+#define BPIN3 _A2
+#define BPIN4 _A3
+
+native do
+	##include <LedCube.h>
+	byte levelPins[SIZE] = {11,12,13};
+	byte colPins[COLS] = {2,3,4,5,6,7,8,9,10};
+	bool on[SIZE][COLS];
+end
+
+loop i in SIZE do
+	loop j in COLS do
+		_on[i][j] = false;
+	end
+end
+
+loop i in 12 do
+	_pinMode(i+2, _OUTPUT);
+end
+_pinMode(BPIN1, _INPUT);
+_pinMode(BPIN2, _INPUT);
+_pinMode(BPIN3, _INPUT);
+_pinMode(BPIN4, _INPUT);
+
+class Cube with
+	function(int lvl,int col, bool val)=>void set;
+	function(int col, bool val)=>void setCol;
+	function(int level, bool val)=>void setLevel;
+	function(void)=>void turnOn;
+	function(void)=>void turnOff;
+do
+	function(int lvl,int col, bool val)=>void set do
+		_on[lvl][col] = val;
+	end
+
+	function(int lvl, int col)=>bool get do
+		return _on[lvl][col];
+	end
+
+	function(int col, bool val)=>void setCol do
+		loop i in SIZE do
+			this.set(i,col,val);
+		end
+	end
+
+	function(int level, bool val)=>void setLevel do
+		loop i in COLS do
+			this.set(level,i,val);
+		end
+	end
+
+	function(void)=>void turnOn do
+		loop i in SIZE do
+			loop j in COLS do
+				this.set(i,j,1);
+			end
+		end
+	end
+
+	function(void)=>void turnOff do
+		loop i in SIZE do
+			loop j in COLS do
+				this.set(i, j, 0);
+			end
+		end
+	end
+end
+
+var int plane = 1;
+var int col = 4;
+function(void)=>void checkColsPlanes do
+	if col > 8 then
+		col = 0;
+	else/if	col < 0 then
+		col = 8;
+	else/if plane < 0 then
+		plane = 2;
+	else/if	plane > 2 then
+		plane = 0;
+	end
+end
+
+var int dir = 0;
+var bool isDown1 = false;
+var bool isDown2 = false;
+var bool isDown3 = false;
+var bool isDown4 = false;
+function(int dirB1, int dirB2, int dirB3, int dirB4)=>void setDir do
+	if _analogRead(BPIN1) > 900 and not isDown1 then
+		isDown1 = true;
+		dir = dirB1;
+	end
+
+	if _analogRead(BPIN2) > 900 and not isDown2 then
+		isDown2 = true;
+		dir = dirB2;
+	end
+
+	if _analogRead(BPIN3) > 900 and not isDown3 then
+		isDown3 = true;
+		dir = dirB3;
+	end
+
+	if _analogRead(BPIN4) > 900 and not isDown4 then
+		isDown4 = true;
+		dir = dirB4;
+	end
+end
+
+//_Serial.begin(9600);
+
+
+var Cube cube;
+
+par do
+	loop do
+		cube.set(plane, col, 0);
+		if dir == 0 then
+			if col>COLS-1-SIZE then
+				col = col - (COLS - SIZE);
+			else	
+				col = col + 3;
+			end
+		else/if dir == 1 then
+			plane = plane + 1;
+			checkColsPlanes();
+		else/if dir == 2 then
+			if col < SIZE then
+				col = col+(SIZE-1)*3;
+			else	
+				col = col - 3;
+			end
+		else/if dir == 3 then
+			plane = plane - 1;
+            checkColsPlanes();
+		else/if dir == 4 then
+			if col%SIZE==SIZE-1 then
+				col = col - (SIZE - 1);
+			else
+				col = col + 1;
+			end
+		else/if col%SIZE == 0 then
+			col = col + (SIZE-1);
+		else
+			col = col -1;
+		end
+		cube.set(plane, col, 1);
+		await 800ms;
+	end
+with
+	loop do
+
+		if dir == 0 then
+			setDir(5, 3, 1, 4);
+		else/if dir == 1 then
+			setDir(5, 2, 0, 4);
+		else/if dir == 2 then
+			setDir(5, 3, 1, 4);
+		else/if dir == 3 then
+			setDir(5, 2, 0, 4);
+		else/if dir == 4 then
+			setDir(2, 3, 1, 0);
+		else
+			setDir(2, 3, 1, 0);
+		end
+
+	
+		if _analogRead(BPIN1) < 900 then
+			isDown1 = false;
+		end		
+		if _analogRead(BPIN2) < 900 then
+			isDown2 = false;
+		end
+		if _analogRead(BPIN3) < 900 then
+			isDown3 = false;
+		end
+		if _analogRead(BPIN4) < 900 then
+			isDown4 = false;
+		end
+
+
+		await 40ms;
+	end
+with
+	loop do
+		loop i in SIZE do
+			_digitalWrite(_levelPins[(i+2)%3], _LOW);
+			_digitalWrite(_levelPins[(i+1)%3], _LOW);
+			_digitalWrite(_levelPins[i%3], _HIGH);
+			loop j in COLS do
+				_digitalWrite(_colPins[j], _on[i%3][j]);
+			end
+			await 6ms;
+		end
+	end
+end
