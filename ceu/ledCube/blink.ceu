@@ -1,50 +1,27 @@
 #include "arduino.ceu"
-#define SIZE 3
-#define COLS SIZE*SIZE
-
-native do
-	##include <LedCube.h>
-	byte levelPins[SIZE] = {11,12,13};
-	byte colPins[COLS] = {2,3,4,5,6,7,8,9,10};
-	
-	bool on[SIZE][COLS];
-end
-
-loop i in SIZE do
-	loop j in COLS do
-		_on[i][j] = false;
-	end
-end
+#include "cube.ceu"
 
 //_Serial.begin(9600);
 
-loop i in 12 do
-	_pinMode(i+2, _OUTPUT);
-end
-
-par do
-	loop do
-		_on[2][8] = false;
-		_on[0][0] = true;
-		await 500ms;
-		_on[0][0] = false;
-		_on[1][4] = true;
-		await 500ms;
-		_on[1][4] = false;
-		_on[2][8] = true;
-		await 500ms;
-	end
-with
-	loop do
-		loop i in SIZE do
-			_digitalWrite(_levelPins[(i+2)%3], _LOW);
-			_digitalWrite(_levelPins[(i+1)%3], _LOW);
-			_digitalWrite(_levelPins[i%3], _HIGH);
-			loop j in COLS do
-				_digitalWrite(_colPins[j], _on[i%3][j]);
-			end
-			
-			await 6ms;
-		end
+var Cube cube;
+loop do
+	par/and do
+		do Drop with 
+			this.cube = &cube;
+			this.time = 1000;
+			this.col = 8;
+		end;
+	with	
+		do Drop with 
+			this.cube = &cube;
+			this.time = 500;
+			this.col = 4;
+		end;
+	with
+		do Drop with 
+			this.cube = &cube;
+			this.time = 250;
+			this.col = 0;
+		end;
 	end
 end
