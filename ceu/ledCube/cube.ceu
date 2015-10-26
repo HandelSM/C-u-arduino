@@ -1,0 +1,85 @@
+#define SIZE 3
+#define COLS SIZE*SIZE
+
+native do
+	##include <LedCube.h>
+	byte levelPins[SIZE] = {11,12,13};
+	byte colPins[COLS] = {2,3,4,5,6,7,8,9,10};
+	bool on[SIZE][COLS];
+end
+
+class Cube with
+	function(int lvl,int col, bool val)=>void set;
+	function(int col, bool val)=>void setCol;
+	function(int level, bool val)=>void setLevel;
+	function(void)=>void turnOn;
+	function(void)=>void turnOff;
+do
+	loop i in SIZE do
+		loop j in COLS do
+			_on[i][j] = false;
+		end
+	end
+
+	loop i in 12 do
+		_pinMode(i+2, _OUTPUT);
+	end
+
+	loop do
+		loop i in SIZE do
+			_digitalWrite(_levelPins[(i+2)%3], _LOW);
+			_digitalWrite(_levelPins[(i+1)%3], _LOW);
+			_digitalWrite(_levelPins[i%3], _HIGH);
+			loop j in COLS do
+				_digitalWrite(_colPins[j], _on[i%3][j]);
+			end
+			await 6ms;
+		end
+	end
+
+	function(int lvl,int col, bool val)=>void set do
+		_on[lvl][col] = val;
+	end
+
+	function(int col, bool val)=>void setCol do
+		loop i in SIZE do
+			this.set(i,col,val);
+		end
+	end
+
+	function(int level, bool val)=>void setLevel do
+		loop i in COLS do
+			this.set(level,i,val);
+		end
+	end
+
+	function (void)=>void turnOn do
+		loop i in SIZE do
+			loop j in COLS do
+				this.set(i,j,1);
+			end
+		end
+	end
+
+	function (void)=>void turnOff do
+        loop i in SIZE do
+            loop j in COLS do
+                this.set(i, j, 0);
+            end
+        end
+    end
+end
+
+class Drop with
+	var Cube& cube;
+	var int col;
+	var int time;
+do
+	loop i in SIZE do
+		cube.set(SIZE-1-i, col, 1);
+		await (time)ms;
+		cube.set(SIZE-1-i, col, 0);
+	end
+	//await (time)ms;
+end
+
