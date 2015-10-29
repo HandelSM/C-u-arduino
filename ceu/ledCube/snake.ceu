@@ -1,91 +1,93 @@
 #include "arduino.ceu"
-#define SIZE 3
-#define COLS SIZE*SIZE
+#include "cube.ceu"
 #define BPIN1 _A0
 #define BPIN2 _A1
 #define BPIN3 _A2
 #define BPIN4 _A3
 
 native do
-	##include <LedCube.h>
-	byte levelPins[SIZE] = {11,12,13};
-	byte colPins[COLS] = {2,3,4,5,6,7,8,9,10};
-	bool on[SIZE][COLS];
-end
-
-loop i in SIZE do
-	loop j in COLS do
-		_on[i][j] = false;
-	end
-end
-
-loop i in 12 do
-	_pinMode(i+2, _OUTPUT);
-end
-_pinMode(BPIN1, _INPUT);
-_pinMode(BPIN2, _INPUT);
-_pinMode(BPIN3, _INPUT);
-_pinMode(BPIN4, _INPUT);
-
-class Cube with
-	function(int lvl,int col, bool val)=>void set;
-	function(int col, bool val)=>void setCol;
-	function(int level, bool val)=>void setLevel;
-	function(void)=>void turnOn;
-	function(void)=>void turnOff;
-do
-	function(int lvl,int col, bool val)=>void set do
-		_on[lvl][col] = val;
-	end
-
-	function(int lvl, int col)=>bool get do
-		return _on[lvl][col];
-	end
-
-	function(int col, bool val)=>void setCol do
-		loop i in SIZE do
-			this.set(i,col,val);
-		end
-	end
-
-	function(int level, bool val)=>void setLevel do
-		loop i in COLS do
-			this.set(level,i,val);
-		end
-	end
-
-	function(void)=>void turnOn do
-		loop i in SIZE do
-			loop j in COLS do
-				this.set(i,j,1);
-			end
-		end
-	end
-
-	function(void)=>void turnOff do
-		loop i in SIZE do
-			loop j in COLS do
-				this.set(i, j, 0);
-			end
-		end
-	end
-end
-
-var int plane = 1;
-var int col = 4;
-function(void)=>void checkColsPlanes do
-	if col > 8 then
-		col = 0;
-	else/if	col < 0 then
-		col = 8;
-	else/if plane < 0 then
-		plane = 2;
-	else/if	plane > 2 then
-		plane = 0;
-	end
+	int path[COLS*SIZE][2];
 end
 
 var int dir = 0;
+
+function @rec (int&& plane,int&& col)=>void checkColsPlanes do
+	if dir == 0 then
+        if *col>COLS-1-SIZE then
+            //*col = *col - (COLS - SIZE);
+            dir = 4;
+            call/rec checkColsPlanes(plane, col);
+        else
+            *col = *col + 3;
+        end
+    else/if dir == 1 then
+        if *plane >= SIZE - 1 then
+            //*plane = 0;
+            dir = 4;
+            call/rec checkColsPlanes(plane, col);
+        else
+            *plane = *plane + 1;
+        end
+    else/if dir == 2 then
+        if *col < SIZE then
+            //*col = *col+(SIZE-1)*3;
+            dir = 5;
+            call/rec checkColsPlanes(plane, col);
+        else
+            *col = *col - 3;
+        end
+    else/if dir == 3 then
+        if *plane < 1 then
+            //*plane = SIZE -1;
+            dir = 0;
+            call/rec checkColsPlanes(plane, col);
+        else
+            *plane = *plane - 1;
+        end
+    else/if dir == 4 then
+        if *col%SIZE==SIZE-1 then
+            //*col = *col - (SIZE - 1);
+            dir = 2;
+            call/rec checkColsPlanes(plane, col);
+        else
+            *col = *col + 1;
+        end
+    else/if *col%SIZE == 0 then
+        //*col = *col + (SIZE-1);
+        dir = 0;
+        call/rec checkColsPlanes(plane, col);
+    else
+        *col = *col -1;
+    end
+end
+
+var int head = 0;
+function @rec (int&& p, int && c) =>void newFood do
+	var int possibleCol = _random(COLS);
+	var int possiblePlane = _random(SIZE);
+
+	if possibleCol != _path[head][1] or possiblePlane != _path[head][0] then
+		*c = _random(COLS);
+		*p = _random(SIZE);
+	else
+		call/rec newFood(p, c);
+	end
+end
+
+var int itemC;
+var int itemP;
+call/rec newFood(&&itemP, &&itemC);
+
+function(int&& plane, int&& col)=>bool comeu do
+	if *plane == itemP and *col == itemC then
+		return true;
+	else
+		return false;
+	end
+end
+
+var int len = 1;
+var int tail = 0;
 var bool isDown1 = false;
 var bool isDown2 = false;
 var bool isDown3 = false;
@@ -114,49 +116,41 @@ end
 
 //_Serial.begin(9600);
 
-
 var Cube cube;
 
 par do
+	var int plane = 0;
+	var int col = 0;
 	loop do
-		cube.set(plane, col, 0);
-		if dir == 0 then
-			if col>COLS-1-SIZE then
-				col = col - (COLS - SIZE);
-			else	
-				col = col + 3;
-			end
-		else/if dir == 1 then
-			plane = plane + 1;
-			checkColsPlanes();
-		else/if dir == 2 then
-			if col < SIZE then
-				col = col+(SIZE-1)*3;
-			else	
-				col = col - 3;
-			end
-		else/if dir == 3 then
-			plane = plane - 1;
-            checkColsPlanes();
-		else/if dir == 4 then
-			if col%SIZE==SIZE-1 then
-				col = col - (SIZE - 1);
-			else
-				col = col + 1;
-			end
-		else/if col%SIZE == 0 then
-			col = col + (SIZE-1);
+		
+		cube.set(_path[tail][0], _path[tail][1], 0);
+		call/rec checkColsPlanes(&&plane, &&col);
+		
+		_path[tail][0] = plane;	
+		_path[tail][1] = col;
+		head = tail;
+
+		if tail == 0 then
+			tail = len-1;
 		else
-			col = col -1;
+			tail = tail-1;
 		end
-		cube.set(plane, col, 1);
+
+		loop i in len do
+			cube.set(_path[(head+i)%len][0], _path[(head+i)%len][1], 1);
+		end
+
+		if comeu(&&_path[head][0], &&_path[head][1]) then
+			len = len + 1;
+			call/rec newFood(&&itemP, &&itemC);
+		end
+		
 		await 800ms;
 	end
 with
 	loop do
-
 		if dir == 0 then
-			setDir(5, 3, 1, 4);
+			setDir(4, 3, 1, 5);
 		else/if dir == 1 then
 			setDir(5, 2, 0, 4);
 		else/if dir == 2 then
@@ -166,9 +160,8 @@ with
 		else/if dir == 4 then
 			setDir(2, 3, 1, 0);
 		else
-			setDir(2, 3, 1, 0);
+			setDir(0, 3, 1, 2);
 		end
-
 	
 		if _analogRead(BPIN1) < 900 then
 			isDown1 = false;
@@ -183,19 +176,13 @@ with
 			isDown4 = false;
 		end
 
-
 		await 40ms;
 	end
 with
 	loop do
-		loop i in SIZE do
-			_digitalWrite(_levelPins[(i+2)%3], _LOW);
-			_digitalWrite(_levelPins[(i+1)%3], _LOW);
-			_digitalWrite(_levelPins[i%3], _HIGH);
-			loop j in COLS do
-				_digitalWrite(_colPins[j], _on[i%3][j]);
-			end
-			await 6ms;
-		end
+		cube.set(itemP, itemC, 1);
+		await 300ms;
+		cube.set(itemP, itemC, 0);
+		await 300ms;
 	end
 end
