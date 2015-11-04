@@ -1,5 +1,12 @@
 Cronograma
 =======================================================
+Semana 26/10
+* O que deveria fazer:
+	* Jogo snake para o cubo.
+* O que fez:
+	* Fiz o snake porem quando a cobra come LED`s indesejados sao ligados e nao e posssivel perder o jogo.
+* O que deve fazer:
+	* Corrigir o bug do jogo e adicionar condicao de perda.
 
 Semana 19/10
 * O que deveria fazer:
