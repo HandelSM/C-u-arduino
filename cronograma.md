@@ -1,5 +1,14 @@
 Cronograma
 =======================================================
+
+Semana 2/11
+* O que deveria fazer:
+	* Corrigir o bug do jogo e adicionar condicao de perda.
+* O que fez:
+	* Corrigi o bug, adicionei condicao de perda e comecei a melhorar a codigo colocando ele coma logica de ceu.
+* O que deve fazer:
+	* Colocar o codigo inteiro com a logica de ceu e modularizado.
+
 Semana 26/10
 * O que deveria fazer:
 	* Jogo snake para o cubo.
