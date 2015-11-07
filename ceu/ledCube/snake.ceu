@@ -9,6 +9,211 @@ native do
 	int path[COLS*SIZE][2];
 end
 
+
+
+class Food with
+	var int p, c;
+	var Cube& cub;
+do
+	loop do
+		cub.set(p,c,1);
+		await 300ms;
+		cub.set(p,c,0);
+		await 300ms;
+	end
+end
+
+_Serial.begin(9600);
+
+class Snake with
+	var Cube& cub;
+do
+	var int head = 0;
+	var int tail = -1;
+	var int len = 1;
+	var int dir = 0;
+	var int plane = 0;
+	var int col = 0;
+
+	var bool isDown1 = false;
+	var bool isDown2 = false;
+	var bool isDown3 = false;
+	var bool isDown4 = false;
+	function(int dirB1, int dirB2, int dirB3, int dirB4)=>void setDir do
+		if _analogRead(BPIN1) > 900 and not isDown1 then
+			isDown1 = true;
+			dir = dirB1;
+		end
+
+		if _analogRead(BPIN2) > 900 and not isDown2 then
+			isDown2 = true;
+			dir = dirB2;
+		end
+
+		if _analogRead(BPIN3) > 900 and not isDown3 then
+			isDown3 = true;
+			dir = dirB3;
+		end
+
+		if _analogRead(BPIN4) > 900 and not isDown4 then
+			isDown4 = true;
+			dir = dirB4;
+		end
+	end
+
+	par do
+		loop do
+			if dir == 0 then
+				if col>COLS-1-SIZE then
+					//*col = *col - (COLS - SIZE);
+					dir = 4;
+					//call/rec move(plane, col);
+				else
+					col = col + 3;
+				end
+			else/if dir == 1 then
+				if plane >= SIZE - 1 then
+					//*plane = 0;
+					dir = 4;
+					//call/rec move(plane, col);
+				else
+					plane = plane + 1;
+				end
+			else/if dir == 2 then
+				if col < SIZE then
+					//*col = *col+(SIZE-1)*3;
+					dir = 5;
+					//call/rec move(plane, col);
+				else
+					col = col - 3;
+				end
+			else/if dir == 3 then
+				if plane < 1 then
+					//*plane = SIZE -1;
+					dir = 0;
+					//call/rec move(plane, col);
+				else
+					plane = plane - 1;
+				end
+			else/if dir == 4 then
+				if col%SIZE==SIZE-1 then
+					//*col = *col - (SIZE - 1);
+					dir = 2;
+					//call/rec move(plane, col);
+				else
+					col = col + 1;
+				end
+			else/if col%SIZE == 0 then
+				//*col = *col + (SIZE-1);
+				dir = 0;
+				//call/rec move(plane, col);
+			else
+				col = col -1;
+			end
+
+			_path[head][0] = plane;
+			_path[head][1] = col;
+			
+			loop i in len do
+				cub.set(_path[(tail+1+i)%(SIZE*COLS)][0], _path[(tail+1+i)%(SIZE*COLS)][1], 1);
+			end
+			
+			cub.set(_path[tail][0], _path[tail][1], 0);
+
+			if head == COLS*SIZE-1 then
+				head = 0;
+			else
+				head = head + 1;	
+				//tail = head - (len-1);
+			end
+
+			if tail == COLS*SIZE-1 then
+				tail = 0;
+			else
+				tail = tail + 1;
+			end
+
+			_Serial.println(col);
+
+			await 800ms;
+		end
+	with
+		loop do
+			if dir == 0 then
+				setDir(4, 3, 1, 5);
+			else/if dir == 1 then
+				setDir(5, 2, 0, 4);
+			else/if dir == 2 then
+				setDir(5, 3, 1, 4);
+			else/if dir == 3 then
+				setDir(5, 2, 0, 4);
+			else/if dir == 4 then
+				setDir(2, 3, 1, 0);
+			else
+				setDir(0, 3, 1, 2);
+			end
+
+			if _analogRead(BPIN1) < 900 then
+				isDown1 = false;
+			end		
+			if _analogRead(BPIN2) < 900 then
+				isDown2 = false;
+			end
+			if _analogRead(BPIN3) < 900 then
+				isDown3 = false;
+			end
+			if _analogRead(BPIN4) < 900 then
+				isDown4 = false;
+			end
+
+			await 40ms;
+		end
+	end
+end
+
+var Cube cube;
+
+loop do
+	watching 30s do
+		var Snake snake with
+			this.cub = &cube;
+		end;
+
+		loop do
+			var Food f with 
+				this.p = _random(SIZE);
+				this.c = _random(COLS);
+				this.cub = &cube;
+			end;
+
+			await 7s;
+		end
+	end
+	watching 10s do
+		loop do
+			cube.turnOn();
+			await 300ms;
+			cube.turnOff();
+			await 300ms;
+		end
+	end
+end
+
+
+
+#if 0
+
+#include "arduino.ceu"
+#include "cube.ceu"
+#define BPIN1 _A0
+#define BPIN2 _A1
+#define BPIN3 _A2
+#define BPIN4 _A3
+
+native do
+	int path[COLS*SIZE][2];
+end
+
 var int dir = 0;
 
 function @rec (int&& plane,int&& col)=>void move do
@@ -241,3 +446,5 @@ with
 		await 7000ms;	
 	end
 end
+
+#endif
