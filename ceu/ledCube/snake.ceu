@@ -4,36 +4,27 @@
 #define BPIN2 _A1
 #define BPIN3 _A2
 #define BPIN4 _A3
+#define SPEED 800
 
 native do
 	int path[COLS*SIZE][2];
-end
-
-
-
-class Food with
-	var int p, c;
-	var Cube& cub;
-do
-	loop do
-		cub.set(p,c,1);
-		await 300ms;
-		cub.set(p,c,0);
-		await 300ms;
-	end
 end
 
 _Serial.begin(9600);
 
 class Snake with
 	var Cube& cub;
+	function(void) => int getHead;
+	function(void) => int getTail;
+	function(void) => int getLen;
+	function(void) => void grow;
 do
-	var int head = 0;
-	var int tail = -1;
+	var int head = 1;
+	var int tail = 0;
 	var int len = 1;
-	var int dir = 0;
-	var int plane = 0;
-	var int col = 0;
+	var int dir = 1;
+	var int plane = -1;
+	var int col = 2;
 
 	var bool isDown1 = false;
 	var bool isDown2 = false;
@@ -61,56 +52,93 @@ do
 		end
 	end
 
+	function(void)=>int getHead do
+		return head;
+	end
+	function(void)=> int getTail do
+		return tail;
+	end
+	
+	function(void)=>int getLen do
+		return len;	
+	end
+
+	function(void)=>void grow do
+		len = len + 1;
+		if tail == 0 then
+			tail = SIZE*COLS-1;
+		else
+			tail = tail - 1;
+		end
+	end
+
+	function @rec (void)=>void move do
+		if head == COLS*SIZE-1 then
+			head = 0;
+		else
+			head = head + 1;	
+			//tail = head - (len-1);
+		end
+
+		if tail == COLS*SIZE-1 then
+			tail = 0;
+		else
+			tail = tail + 1;
+		end
+
+		if dir == 0 then
+			if col>COLS-1-SIZE then
+				//*col = *col - (COLS - SIZE);
+				dir = 4;
+				call/rec move();
+			else
+				col = col + 3;
+			end
+		else/if dir == 1 then
+			if plane >= SIZE - 1 then
+				//*plane = 0;
+				dir = 4;
+				call/rec move();
+			else
+				plane = plane + 1;
+			end
+		else/if dir == 2 then
+			if col < SIZE then
+				//*col = *col+(SIZE-1)*3;
+				dir = 5;
+				call/rec move();
+			else
+				col = col - 3;
+			end
+		else/if dir == 3 then
+			if plane < 1 then
+				//*plane = SIZE -1;
+				dir = 0;
+				call/rec move();
+			else
+				plane = plane - 1;
+			end
+		else/if dir == 4 then
+			if col%SIZE==SIZE-1 then
+				//*col = *col - (SIZE - 1);
+				dir = 2;
+				call/rec move();
+			else
+				col = col + 1;
+			end
+		else/if col%SIZE == 0 then
+			//*col = *col + (SIZE-1);
+			dir = 0;
+			call/rec move();
+		else
+			col = col -1;
+		end
+	end
+
 	par do
 		loop do
-			if dir == 0 then
-				if col>COLS-1-SIZE then
-					//*col = *col - (COLS - SIZE);
-					dir = 4;
-					//call/rec move(plane, col);
-				else
-					col = col + 3;
-				end
-			else/if dir == 1 then
-				if plane >= SIZE - 1 then
-					//*plane = 0;
-					dir = 4;
-					//call/rec move(plane, col);
-				else
-					plane = plane + 1;
-				end
-			else/if dir == 2 then
-				if col < SIZE then
-					//*col = *col+(SIZE-1)*3;
-					dir = 5;
-					//call/rec move(plane, col);
-				else
-					col = col - 3;
-				end
-			else/if dir == 3 then
-				if plane < 1 then
-					//*plane = SIZE -1;
-					dir = 0;
-					//call/rec move(plane, col);
-				else
-					plane = plane - 1;
-				end
-			else/if dir == 4 then
-				if col%SIZE==SIZE-1 then
-					//*col = *col - (SIZE - 1);
-					dir = 2;
-					//call/rec move(plane, col);
-				else
-					col = col + 1;
-				end
-			else/if col%SIZE == 0 then
-				//*col = *col + (SIZE-1);
-				dir = 0;
-				//call/rec move(plane, col);
-			else
-				col = col -1;
-			end
-
+			call/rec move();
+		
 			_path[head][0] = plane;
 			_path[head][1] = col;
 			
@@ -120,22 +148,7 @@ do
 			
 			cub.set(_path[tail][0], _path[tail][1], 0);
 
-			if head == COLS*SIZE-1 then
-				head = 0;
-			else
-				head = head + 1;	
-				//tail = head - (len-1);
-			end
-
-			if tail == COLS*SIZE-1 then
-				tail = 0;
-			else
-				tail = tail + 1;
-			end
-
-			_Serial.println(col);
-
-			await 800ms;
+			await (SPEED)ms;
 		end
 	with
 		loop do
@@ -171,25 +184,104 @@ do
 	end
 end
 
-var Cube cube;
+class Food with
+	var Cube& cub;
+	var int h;
+	var int p;
+	var int c;
+	function(void) => int getPlane;
+	function(void) => int getCol;
+do
+	function(void) => int getPlane do
+		return p;
+	end
+	
+	function(void) => int getCol do
+		return c;
+	end
+
+	loop do
+		cub.set(p,c,1);
+		await 300ms;
+		cub.set(p,c,0);
+		await 300ms;
+	end
+end
+
+class Eat with
+	var Snake& s;
+	var int p;
+	var int c;
+do
+	loop do
+		if _path[s.getHead()][0] == p and _path[s.getHead()][1] == c then
+			s.grow();
+			escape 0;
+		else
+			await (800)ms;
+		end
+	end
+end
+/*
+class Lose with
+	var Snake cobra;
+do
+	var int tail = cobra.getTail();
+	var int head = cobra.getHead();
+	loop i in cobra.getLen() do
+		if _path[(tail+1+i)%(SIZE*COLS)][0] == _path[head][0] and _path[(tail+1+i)%(SIZE*COLS)][1] == _path[head][1] then
+			escape 0;
+		end
+	end
+	await 800ms;
+end
+*/
+function @rec (int&& p, int&& c, int h) => void newFood do
+	var int pH = _random(SIZE);
+	if pH == _path[h][0] then
+		call/rec newFood(p, c, h);	
+	else
+		*p = pH;
+		*c = _random(COLS);
+	end	
+end
 
 loop do
-	watching 30s do
+	var Cube cube;
+
+	do
 		var Snake snake with
 			this.cub = &cube;
 		end;
 
-		loop do
-			var Food f with 
-				this.p = _random(SIZE);
-				this.c = _random(COLS);
-				this.cub = &cube;
-			end;
+		watching 100s do
+			var int p;
+			var int c;
+			loop do
+				par/or do
+					call/rec newFood(&&p, &&c, snake.getHead());
+					var Food f with
+						this.p = p;
+						this.c = c; 
+						this.h = snake.getHead();
+						this.cub = &cube;
+					end;
 
-			await 7s;
+					await 7s;
+					cube.set(p,c,0);
+				with
+					var Eat eat with
+						this.s = &snake;
+						this.p = p;
+						this.c = c;
+					end;
+					await eat;
+				end
+			end
 		end
 	end
-	watching 10s do
+
+	watching 5s do
 		loop do
 			cube.turnOn();
 			await 300ms;
@@ -200,9 +292,7 @@ loop do
 end
 
 
-
 #if 0
-
 #include "arduino.ceu"
 #include "cube.ceu"
 #define BPIN1 _A0
