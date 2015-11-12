@@ -72,7 +72,7 @@ do
 		end
 	end
 
-	function @rec (void)=>void move do
+	function (void)=>void move do
 		if head == COLS*SIZE-1 then
 			head = 0;
 		else
@@ -86,50 +86,96 @@ do
 			tail = tail + 1;
 		end
 
+
+        var int wall0 = COLS-1-SIZE;
+        var int wall1 = SIZE - 1;
+        var int wall2 = SIZE;
+        var int wall3 = 1; 
+        var int wall4 = SIZE-1;
+        var int wall5 = col%SIZE;
+
+
+        #define WALL0 col>COLS-1-SIZE
+        #define WALL1 plane>=SIZE-1
+        #define WALL2 col<SIZE
+        #define WALL3 plane<1
+        #define WALL4 col%SIZE==SIZE-1
+        #define WALL5 col%SIZE==0
+        
 		if dir == 0 then
-			if col>COLS-1-SIZE then
+			if WALL0 then
 				//*col = *col - (COLS - SIZE);
-				dir = 4;
-				call/rec move();
+                if WALL4 then
+                    dir = 5;
+                    col = col - 1;
+                else
+				    dir = 4;
+                    col = col + 1;
+                end
 			else
 				col = col + 3;
 			end
 		else/if dir == 1 then
-			if plane >= SIZE - 1 then
+			if WALL1 then
 				//*plane = 0;
-				dir = 4;
-				call/rec move();
+				if WALL4 then
+                    dir = 5;
+                    col = col - 1;
+                else
+				    dir = 4;
+                    col = col + 1;
+                end
 			else
 				plane = plane + 1;
 			end
 		else/if dir == 2 then
-			if col < SIZE then
+			if WALL2 then
 				//*col = *col+(SIZE-1)*3;
-				dir = 5;
-				call/rec move();
+                if WALL5 then
+                    dir = 4;
+                    col = col + 1;
+                else
+				    dir = 5;
+                    col = col - 1;
+                end
 			else
 				col = col - 3;
 			end
 		else/if dir == 3 then
-			if plane < 1 then
+			if WALL3 then
 				//*plane = SIZE -1;
-				dir = 0;
-				call/rec move();
+                if WALL0 then
+                    dir = 2;
+                    col = col - 3;
+                else
+				    dir = 0;
+                    col = col + 3;
+                end
 			else
 				plane = plane - 1;
 			end
 		else/if dir == 4 then
-			if col%SIZE==SIZE-1 then
+			if WALL4 then
 				//*col = *col - (SIZE - 1);
-				dir = 2;
-				call/rec move();
+                if WALL2 then
+                    dir = 0;
+                    col = col + 3;
+                else
+				    dir = 2;
+                    col = col - 3;
+                end
 			else
 				col = col + 1;
 			end
-		else/if col%SIZE == 0 then
+		else/if WALL5 then
 			//*col = *col + (SIZE-1);
-			dir = 0;
-			call/rec move();
+            if WALL0 then
+                dir = 2;
+                col = col - 3;
+            else
+                dir = 0;
+                col = col + 3;
+            end
 		else
 			col = col -1;
 		end
@@ -137,7 +183,7 @@ do
 
 	par do
 		loop do
-			call/rec move();
+			move();
 		
 			_path[head][0] = plane;
 			_path[head][1] = col;
