@@ -33,18 +33,33 @@ do
 			s.cub.set(p,c,1);
 			escape 0;
 		else
-			await (800)ms;
+			await (SPEED)ms;
 		end
 	end
 end
 
+function (int x) => int mod do
+	if x>0 then
+		return x;
+	end
+	return -x;
+end
+
+function (int p1, int c1, int p2, int c2) => int dist do
+	var int distCol;
+	distCol = mod(c2 - c1);
+	distCol = distCol%SIZE+distCol/SIZE;
+	return mod(p2-p1)+distCol;
+end
+
 function @rec (int&& p, int&& c, int h) => void newFood do
 	var int pH = _random(SIZE);
-	if pH == _path[h][0] then
-		call/rec newFood(p, c, h);	
-	else
+	var int pC = _random(SIZE);
+	if dist(pH, pC,_path[h][0], _path[h][1]) > 2 then
 		*p = pH;
-		*c = _random(COLS);
-	end	
+		*c = pC;
+	else
+		call/rec newFood(p, c, h);	
+	end
 end
 
