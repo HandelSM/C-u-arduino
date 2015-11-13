@@ -1,0 +1,30 @@
+#include "snake.ceu"
+
+class Lose with
+	var Snake& s;
+do
+    var bool sair = false;
+    loop do
+		var int head, tail, len;
+		head = s.getHead();
+		tail = s.getTail();
+		len = s.getLen();
+
+        loop i in len-1 do
+				_Serial.println(sair);
+			if 
+				_path[(tail+i)%(SIZE*COLS)][0] == _path[head][0] and 
+				_path[(tail+i)%(SIZE*COLS)][1] == _path[head][1]
+			then
+                sair = true;
+            end
+        end
+
+        if sair then
+           break; 
+        else
+            await 800ms;
+        end
+    end
+end
+
