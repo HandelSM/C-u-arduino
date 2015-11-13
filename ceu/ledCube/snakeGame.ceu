@@ -1,0 +1,55 @@
+#include "arduino.ceu"
+#include "lose.ceu"
+#include "food.ceu"
+
+var Cube& cub;
+
+loop do
+	var Cube cube;
+
+	do
+		var Snake snake with
+			this.cub = &cube;
+		end;
+
+        var Lose lose with
+			this.s = &snake;
+        end;
+
+		watching lose do
+			var int p;
+			var int c;
+			loop do
+				par/or do
+					call/rec newFood(&&p, &&c, snake.getHead());
+					var Food f with
+						this.p = p;
+						this.c = c; 
+						this.h = snake.getHead();
+						this.cub = &cube;
+					end;
+
+					await 7s;
+					cube.set(p,c,0);
+				with
+					var Eat eat with
+						this.s = &snake;
+						this.p = p;
+						this.c = c;
+					end;
+					await eat;
+				end
+			end
+		end
+	end
+
+	watching 5s do
+		loop do
+			cube.turnOn();
+			await 300ms;
+			cube.turnOff();
+			await 300ms;
+		end
+	end
+end
+
