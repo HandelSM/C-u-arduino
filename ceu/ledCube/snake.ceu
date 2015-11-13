@@ -262,26 +262,44 @@ do
 	loop do
 		if _path[s.getHead()][0] == p and _path[s.getHead()][1] == c then
 			s.grow();
+			s.cub.set(p,c,1);
 			escape 0;
 		else
 			await (800)ms;
 		end
 	end
 end
-/*
+
+var Cube& cub;
+
 class Lose with
-	var Snake cobra;
+	var Snake& s;
 do
-	var int tail = cobra.getTail();
-	var int head = cobra.getHead();
-	loop i in cobra.getLen() do
-		if _path[(tail+1+i)%(SIZE*COLS)][0] == _path[head][0] and _path[(tail+1+i)%(SIZE*COLS)][1] == _path[head][1] then
-			escape 0;
-		end
-	end
-	await 800ms;
+    var bool sair = false;
+    loop do
+		var int head, tail, len;
+		head = s.getHead();
+		tail = s.getTail();
+		len = s.getLen();
+
+        loop i in len-1 do
+				_Serial.println(sair);
+			if 
+				_path[(tail+i)%(SIZE*COLS)][0] == _path[head][0] and 
+				_path[(tail+i)%(SIZE*COLS)][1] == _path[head][1]
+			then
+                sair = true;
+            end
+        end
+
+        if sair then
+           break; 
+        else
+            await 800ms;
+        end
+    end
 end
-*/
+
 function @rec (int&& p, int&& c, int h) => void newFood do
 	var int pH = _random(SIZE);
 	if pH == _path[h][0] then
@@ -300,7 +318,11 @@ loop do
 			this.cub = &cube;
 		end;
 
-		watching 100s do
+        var Lose lose with
+			this.s = &snake;
+        end;
+
+		watching lose do
 			var int p;
 			var int c;
 			loop do
@@ -337,250 +359,3 @@ loop do
 	end
 end
 
-
-#if 0
-#include "arduino.ceu"
-#include "cube.ceu"
-#define BPIN1 _A0
-#define BPIN2 _A1
-#define BPIN3 _A2
-#define BPIN4 _A3
-
-native do
-	int path[COLS*SIZE][2];
-end
-
-var int dir = 0;
-
-function @rec (int&& plane,int&& col)=>void move do
-	if dir == 0 then
-        if *col>COLS-1-SIZE then
-            //*col = *col - (COLS - SIZE);
-            dir = 4;
-            call/rec move(plane, col);
-        else
-            *col = *col + 3;
-        end
-    else/if dir == 1 then
-        if *plane >= SIZE - 1 then
-            //*plane = 0;
-            dir = 4;
-            call/rec move(plane, col);
-        else
-            *plane = *plane + 1;
-        end
-    else/if dir == 2 then
-        if *col < SIZE then
-            //*col = *col+(SIZE-1)*3;
-            dir = 5;
-            call/rec move(plane, col);
-        else
-            *col = *col - 3;
-        end
-    else/if dir == 3 then
-        if *plane < 1 then
-            //*plane = SIZE -1;
-            dir = 0;
-            call/rec move(plane, col);
-        else
-            *plane = *plane - 1;
-        end
-    else/if dir == 4 then
-        if *col%SIZE==SIZE-1 then
-            //*col = *col - (SIZE - 1);
-            dir = 2;
-            call/rec move(plane, col);
-        else
-            *col = *col + 1;
-        end
-    else/if *col%SIZE == 0 then
-        //*col = *col + (SIZE-1);
-        dir = 0;
-        call/rec move(plane, col);
-    else
-        *col = *col -1;
-    end
-
-	
-end
-
-var int head;
-function @rec (int&& p, int && c) =>void newFood do
-	var int possibleCol = _random(COLS);
-	var int possiblePlane = _random(SIZE);
-	var int rHead;
-	if head == 0 then
-		rHead = COLS*SIZE-1;
-	else
-		rHead = head - 1;
-	end
-	if possiblePlane != _path[rHead][0] and (possiblePlane != *p or possibleCol != *c) then
-		*c = possibleCol;
-		*p = possiblePlane;
-	else
-		call/rec newFood(p, c);
-	end
-end
-
-var int itemC;
-var int itemP;
-
-function(int&& plane, int&& col)=>bool comeu do
-	if *plane == itemP and *col == itemC then
-		return true;
-	else
-		return false;
-	end
-end
-
-var bool isDown1 = false;
-var bool isDown2 = false;
-var bool isDown3 = false;
-var bool isDown4 = false;
-function(int dirB1, int dirB2, int dirB3, int dirB4)=>void setDir do
-	if _analogRead(BPIN1) > 900 and not isDown1 then
-		isDown1 = true;
-		dir = dirB1;
-	end
-
-	if _analogRead(BPIN2) > 900 and not isDown2 then
-		isDown2 = true;
-		dir = dirB2;
-	end
-
-	if _analogRead(BPIN3) > 900 and not isDown3 then
-		isDown3 = true;
-		dir = dirB3;
-	end
-
-	if _analogRead(BPIN4) > 900 and not isDown4 then
-		isDown4 = true;
-		dir = dirB4;
-	end
-end
-
-
-function @rec (int&& plane, int&& col, int&& tail, int&& len)=>bool lose do
-	loop i in (*len-1) do
-		if *plane == _path[(*tail+1+i)%(SIZE*COLS)][0] and *col == _path[(*tail+1+i)%(SIZE*COLS)][1] then
-			return true;
-		end
-	end
-	return false;
-end
-
-//_Serial.begin(9600);
-
-var int gameState = 0;
-
-var Cube cube;
-
-par do
-	var int plane;
-	var int col;
-	var int tail;
-	var int len;
-
-	loop do
-		if gameState == 0 then
-			plane = 0;
-			col = 0;
-			tail = 0;
-			len = 1;
-			gameState = 1;
-			head = 1;
-		else/if gameState == 1 then
-			call/rec move(&&plane, &&col);
-			_path[head][0] = plane;
-			_path[head][1] = col;
-			loop i in len do
-				cube.set(_path[(tail+1+i)%(SIZE*COLS)][0], _path[(tail+1+i)%(SIZE*COLS)][1], 1);
-			end
-			
-			if call/rec lose(&&plane, &&col, &&tail, &&len) then
-				gameState = -1;	
-			end
-	
-			if comeu(&&plane, &&col) then
-				len = len + 1;
-				tail = tail - 1;
-				if tail < 0 then
-					tail = SIZE*COLS-1;
-				end
-				itemP = -1;
-			else
-				cube.set(_path[tail][0], _path[tail][1], 0);
-			end
-			
-			if head == COLS*SIZE-1 then
-				head = 0;
-			else
-				head = head + 1;	
-				//tail = head - (len-1);
-			end
-
-			if tail == COLS*SIZE-1 then
-				tail = 0;
-			else
-				tail = tail + 1;
-			end
-		end
-		await 400ms;
-	end
-with
-	loop do
-		if dir == 0 then
-			setDir(4, 3, 1, 5);
-		else/if dir == 1 then
-			setDir(5, 2, 0, 4);
-		else/if dir == 2 then
-			setDir(5, 3, 1, 4);
-		else/if dir == 3 then
-			setDir(5, 2, 0, 4);
-		else/if dir == 4 then
-			setDir(2, 3, 1, 0);
-		else
-			setDir(0, 3, 1, 2);
-		end
-	
-		if _analogRead(BPIN1) < 900 then
-			isDown1 = false;
-		end		
-		if _analogRead(BPIN2) < 900 then
-			isDown2 = false;
-		end
-		if _analogRead(BPIN3) < 900 then
-			isDown3 = false;
-		end
-		if _analogRead(BPIN4) < 900 then
-			isDown4 = false;
-		end
-
-		await 40ms;
-	end
-with
-	loop do
-		if gameState == 1 then
-			if itemP != -1 then
-				cube.set(itemP, itemC, 1);
-				await 300ms;
-				cube.set(itemP, itemC, 0);
-			end
-		else/if gameState == -1 then
-			cube.turnOn();
-			await 300ms;
-			cube.turnOff();
-		end
-		await 300ms;
-	end
-with
-	loop do
-		if gameState == 1 then
-			cube.set(itemP, itemC, 0);
-			call/rec newFood(&&itemP, &&itemC);
-		end
-		await 7000ms;	
-	end
-end
-
-#endif
