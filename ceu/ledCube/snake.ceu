@@ -1,5 +1,6 @@
 #include "arduino.ceu"
 #include "cube.ceu"
+
 #define BPIN1 _A0
 #define BPIN2 _A1
 #define BPIN3 _A2
@@ -9,8 +10,6 @@
 native do
 	int path[COLS*SIZE][2];
 end
-
-_Serial.begin(9600);
 
 class Snake with
 	var Cube& cub;
@@ -77,7 +76,6 @@ do
 			head = 0;
 		else
 			head = head + 1;	
-			//tail = head - (len-1);
 		end
 
 		if tail == COLS*SIZE-1 then
@@ -85,15 +83,6 @@ do
 		else
 			tail = tail + 1;
 		end
-
-
-        var int wall0 = COLS-1-SIZE;
-        var int wall1 = SIZE - 1;
-        var int wall2 = SIZE;
-        var int wall3 = 1; 
-        var int wall4 = SIZE-1;
-        var int wall5 = col%SIZE;
-
 
         #define WALL0 col>COLS-1-SIZE
         #define WALL1 plane>=SIZE-1
@@ -226,135 +215,6 @@ do
 			end
 
 			await 40ms;
-		end
-	end
-end
-
-class Food with
-	var Cube& cub;
-	var int h;
-	var int p;
-	var int c;
-	function(void) => int getPlane;
-	function(void) => int getCol;
-do
-	function(void) => int getPlane do
-		return p;
-	end
-	
-	function(void) => int getCol do
-		return c;
-	end
-
-	loop do
-		cub.set(p,c,1);
-		await 300ms;
-		cub.set(p,c,0);
-		await 300ms;
-	end
-end
-
-class Eat with
-	var Snake& s;
-	var int p;
-	var int c;
-do
-	loop do
-		if _path[s.getHead()][0] == p and _path[s.getHead()][1] == c then
-			s.grow();
-			s.cub.set(p,c,1);
-			escape 0;
-		else
-			await (800)ms;
-		end
-	end
-end
-
-var Cube& cub;
-
-class Lose with
-	var Snake& s;
-do
-    var bool sair = false;
-    loop do
-		var int head, tail, len;
-		head = s.getHead();
-		tail = s.getTail();
-		len = s.getLen();
-
-        loop i in len-1 do
-				_Serial.println(sair);
-			if 
-				_path[(tail+i)%(SIZE*COLS)][0] == _path[head][0] and 
-				_path[(tail+i)%(SIZE*COLS)][1] == _path[head][1]
-			then
-                sair = true;
-            end
-        end
-
-        if sair then
-           break; 
-        else
-            await 800ms;
-        end
-    end
-end
-
-function @rec (int&& p, int&& c, int h) => void newFood do
-	var int pH = _random(SIZE);
-	if pH == _path[h][0] then
-		call/rec newFood(p, c, h);	
-	else
-		*p = pH;
-		*c = _random(COLS);
-	end	
-end
-
-loop do
-	var Cube cube;
-
-	do
-		var Snake snake with
-			this.cub = &cube;
-		end;
-
-        var Lose lose with
-			this.s = &snake;
-        end;
-
-		watching lose do
-			var int p;
-			var int c;
-			loop do
-				par/or do
-					call/rec newFood(&&p, &&c, snake.getHead());
-					var Food f with
-						this.p = p;
-						this.c = c; 
-						this.h = snake.getHead();
-						this.cub = &cube;
-					end;
-
-					await 7s;
-					cube.set(p,c,0);
-				with
-					var Eat eat with
-						this.s = &snake;
-						this.p = p;
-						this.c = c;
-					end;
-					await eat;
-				end
-			end
-		end
-	end
-
-	watching 5s do
-		loop do
-			cube.turnOn();
-			await 300ms;
-			cube.turnOff();
-			await 300ms;
 		end
 	end
 end
