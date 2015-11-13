@@ -5,7 +5,7 @@
 #define BPIN2 _A1
 #define BPIN3 _A2
 #define BPIN4 _A3
-#define SPEED 800
+#define SPEED 500
 
 native do
 	int path[COLS*SIZE][2];
