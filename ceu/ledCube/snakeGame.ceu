@@ -7,6 +7,7 @@ var Cube& cub;
 loop do
 	var Cube cube;
 
+	var int lenEnd;
 	do
 		var Snake snake with
 			this.cub = &cube;
@@ -41,14 +42,72 @@ loop do
 				end
 			end
 		end
+		lenEnd = snake.getLen();
 	end
-
-	watching 5s do
-		loop do
+	if lenEnd < COLS*1.2 then
+		loop i in 8 do
 			cube.turnOn();
 			await 300ms;
 			cube.turnOff();
 			await 300ms;
+		end
+	else
+		cube.turnOff();
+		loop i in 20 do
+			var Drop drop with
+				this.cube = &cube;
+				this.col = 4;
+				this.time = 10*(20-i);
+			end;
+			await drop;
+		end
+		
+		var Drop _ with
+			this.cube = &cube;
+			this.col = 4;
+			this.time = 200;
+		end;
+
+		loop i in 20 do
+			var Drop _ with
+				this.cube = &cube;
+				this.col = 0;
+				this.time = (20-i)*5;
+			end;await 100ms;
+			var Drop _ with
+				this.cube = &cube;
+				this.col = 2;
+				this.time = (20-i)*5;
+			end;await 100ms;
+			var Drop _ with
+				this.cube = &cube;
+				this.col = 6;
+				this.time = (20-i)*5;
+			end;await 100ms;
+			var Drop _ with
+				this.cube = &cube;
+				this.col = 8;
+				this.time = (20-i)*5;
+			end;await 100ms;
+
+			await (SIZE*(20-i)*5)ms;
+		end
+		loop i in 20 do
+			loop j in 9 do
+				var Drop _ with
+					this.cube = &cube;
+					this.col = j;
+					this.time = 30;
+				end;await 10ms;
+				
+				await (SIZE*30)ms;
+			end
+		end
+		loop i in 30 do
+			cube.turnOn();
+			await 50ms;
+			cube.turnOff();
+			await 50ms;
 		end
 	end
 end
