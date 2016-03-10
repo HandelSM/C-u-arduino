@@ -1,6 +1,14 @@
 Cronograma
 =======================================================
 
+Semana 9/03
+* O que deveria fazer:
+	* Ler artigos, escrever o próprio e continuar implementações.
+* O que fez:
+	* Comecei a ler o artigo ganhador de melhor artigo de automação da ICRA2015.
+* O que deve fazer:
+	* Terminar de ler o artigo e começar a escrever o próprio.
+
 Semana 2/11
 * O que deveria fazer:
 	* Corrigir o bug do jogo e adicionar condicao de perda.
