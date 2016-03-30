@@ -1,6 +1,30 @@
 Cronograma
 =======================================================
 
+Semana 30/03
+* O que deveria fazer:
+	* Fazer a apresentação para reativos.
+* O que fez:
+	* Fiz a apresentação para reativos. 
+* O que deve fazer:
+	* Começar a ler: The Urbi Universal Platform for Robotics.
+
+Semana 23/03
+* O que deveria fazer:
+	* Terminar de ler o artigo.
+* O que fez:
+	* Li o artigo.
+* O que deve fazer:
+	* Fazer a apresentação para reativos. 
+
+Semana 16/03
+* O que deveria fazer:
+	* Terminar de ler o artigo e começar a escrever o próprio.
+* O que fez:
+	* Li uma parte do artigo.
+* O que deve fazer:
+	* Terminar de ler o artigo.
+
 Semana 9/03
 * O que deveria fazer:
 	* Ler artigos, escrever o próprio e continuar implementações.
