@@ -1,6 +1,14 @@
 Cronograma
 =======================================================
 
+Semana 4/03
+* O que deveria fazer:
+	* Começar a ler: The Urbi Universal Platform for Robotics.
+* O que fez:
+	*  Comecei a ler o documento da especificação do relógio e rodei o relógio em Esterel no Céu in a Box.
+* O que deve fazer:
+	* Ler o documento da especificação do relógio.
+
 Semana 30/03
 * O que deveria fazer:
 	* Fazer a apresentação para reativos.
