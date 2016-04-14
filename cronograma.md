@@ -1,7 +1,16 @@
 Cronograma
 =======================================================
 
-Semana 4/03
+
+Semana 13/03
+* O que deveria fazer:
+	* Ler o documento da especificação do relógio.
+* O que fez:
+	*  Li a especificação até a seção 7.
+* O que deve fazer:
+	* Terminar de ler e começar a implementação em Céu.
+
+Semana 6/03
 * O que deveria fazer:
 	* Começar a ler: The Urbi Universal Platform for Robotics.
 * O que fez:
