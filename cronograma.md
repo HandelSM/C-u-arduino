@@ -1,8 +1,14 @@
 Cronograma
 =======================================================
+Semana 20/04
+* O que deveria fazer:
+	* Terminar de ler e começar a implementação em Céu.
+* O que fez:
+	*  Terminei de ler o artigo.
+* O que deve fazer:
+	* Começar a implementação em Céu.
 
-
-Semana 13/03
+Semana 13/04
 * O que deveria fazer:
 	* Ler o documento da especificação do relógio.
 * O que fez:
@@ -10,7 +16,7 @@ Semana 13/03
 * O que deve fazer:
 	* Terminar de ler e começar a implementação em Céu.
 
-Semana 6/03
+Semana 6/04
 * O que deveria fazer:
 	* Começar a ler: The Urbi Universal Platform for Robotics.
 * O que fez:
