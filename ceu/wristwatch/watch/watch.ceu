@@ -1,0 +1,58 @@
+
+
+
+
+loop do
+	watching ENTER_SET_WATCH_MODE_COMMAND do
+		loop do
+			par do
+				await S;
+				watch_time_ = _INCREMENT_WATCH_TIME(watch_time_);
+				emit watch_time => watch_time;
+				emit WATCH_TIME => watch_time;
+				
+				emit beep => beep;
+				emit BEEP => beep;
+				//emit WATCH_TIME (INCREMENT_WATCH_TIME(pre(?WATCH_TIME)));
+				//emit BEEP (WATCH_BEEP (?WATCH_TIME, ?CHIME_STATUS));
+			with
+				await TOGGLE_24H_MODE_COMMAND;
+				//emit WATCH_TIME(TOGGLE_24H_MODE_IN_WATCH_TIME (pre(?WATCH_TIME)));
+			with
+				await TOGGLE_CHIME_COMMAND;
+				//emit CHIME_STATUS (not pre(?CHIME_STATUS));
+			end
+		end
+	end
+	
+	watching EXIT_SET_WATCH_MODE_COMMAND do
+		emit START_ENHANCING => INITIAL_WATCH_TIME_POSITION;
+		//emit START_ENHANCING (INITIAL_WATCH_TIME_POSITION);
+
+		loop do
+			par do
+				await S;
+				watch_time_ = _INCREMENT_WATCH_TIME_IN_SET_MODE(watch_time_);
+				emit watch_time => watch_time;
+				emit WATCH_TIME => watch_time;
+				
+				emit beep => beep;
+				emit BEEP => beep;
+			
+				//emit WATCH_TIME(INCREMENT_WATCH_TIME_IN_SET_MODE(pre(?WATCH_TIME),?START_ENHANCING));
+            //emit WATCH_BEING_SET
+	
+	
+			with
+				await TOGGLE_24H_MODE_COMMAND;
+				//emit WATCH_TIME (SET_WATCH_TIME(pre(?WATCH_TIME),?START_ENHANCING));
+            //emit WATCH_BEING_SET
+			with
+				await TOGGLE_CHIME_COMMAND;
+				emit STOP_ENHANCING (pre(?START_ENHANCING));
+				emit START_ENHANCING (NEXT_WATCH_TIME_POSITION(pre(?START_ENHANCING)))
+			end
+		end
+	end
+	//emit STOP_ENHANCING (pre(?START_ENHANCING))
+end

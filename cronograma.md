@@ -1,5 +1,25 @@
 Cronograma
 =======================================================
+
+Semana 11/04
+* O que deveria fazer:
+	* Começar a implementação em Céu.
+* O que fez:
+	* Comecei a implementação em Céu 
+* O que deve fazer:
+	* Continuar a implementação.
+
+Semana 4/04
+	------
+
+Semana 27/04
+* O que deveria fazer:
+	* Começar a implementação em Céu.
+* O que fez:
+	*  Aprendi mais sobre esterel na seguinte apresentação: http://www1.cs.columbia.edu/~sedwards/classes/2002/w4995-02/esterel.pdf
+* O que deve fazer:
+	* ------- (provas)
+
 Semana 20/04
 * O que deveria fazer:
 	* Terminar de ler e começar a implementação em Céu.
