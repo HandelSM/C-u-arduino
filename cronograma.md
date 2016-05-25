@@ -1,7 +1,25 @@
 Cronograma
 =======================================================
 
-Semana 11/04
+Semana 25/05
+* O que deveria fazer:
+	* Resolver o problema para passar para o arduino e continuar a implementação
+* O que fez:
+	* Resolvi o problema, agora novamente é possível passar código para o arduino. Fiz a tela inicial do relógio (estática, apenas contando o tempo a partir de meia noite de primeiro de janeiro) Utilizando as funções do arquivo watch_data.c e fazendo as devidas modificações. 
+* O que deve fazer:
+	* Começar a implementação do módulo SET_WATCH
+
+
+Semana 18/05
+* O que deveria fazer:
+	* Continuar a implementação em Céu.
+* O que fez:
+	*  Analisei a parte feita em C do relógio.
+* O que deve fazer:
+	* Resolver o problema para passar para o arduino e continuar a implementação
+
+
+Semana 11/05
 * O que deveria fazer:
 	* Começar a implementação em Céu.
 * O que fez:
@@ -9,7 +27,7 @@ Semana 11/04
 * O que deve fazer:
 	* Continuar a implementação.
 
-Semana 4/04
+Semana 4/05
 	------
 
 Semana 27/04
