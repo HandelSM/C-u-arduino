@@ -1,6 +1,23 @@
 Cronograma
 =======================================================
 
+Semana 08/06:
+* O que deveria fazer:
+	* Continuar a implementação do módulo WATCH e corrigir o problema dos tipos.
+* O que fez:
+	* Corrigi o problema dos tipos e modifiquei o módulo WATCH para usar eventos.
+* O que deve fazer:
+	* Continuar a implementação do módulo WATCH além de fazer outros módulos utilizando eventos.
+
+Semana 01/06:
+* O que deveria fazer:
+	* Continuar a implementação do módulo WATCH
+* O que fez:
+	* Procurei corrigir o problema de não poder usar tipos definidos em C.
+* O que deve fazer:
+	* Continuar a implementação do módulo WATCH e corrigir o problema dos tipos.
+
+
 Semana 25/05
 * O que deveria fazer:
 	* Resolver o problema para passar para o arduino e continuar a implementação
