@@ -86,3 +86,12 @@ char* WATCH_TIME_TYPE_to_text (WATCH_TIME_TYPE wt)
    return res;
 }
 
+
+/***** The TOGGLE_24H_MODE_IN_WATCH_TIME\ function *****/
+
+WATCH_TIME_TYPE TOGGLE_24H_MODE_IN_WATCH_TIME (WATCH_TIME_TYPE wt)
+{
+   wt.mode12h = ! wt.mode12h;
+   return wt;
+}
+

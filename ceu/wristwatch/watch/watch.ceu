@@ -1,26 +1,56 @@
-
-native do
+native @plain _WATCH_TIME_TYPE;
+native/pre do
 	##include <LiquidCrystal.h>
 	##include <watch_data.c>
-
+	
 	LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
-	WATCH_TIME_TYPE time = GET_INITIAL_WATCH_TIME();
+	WATCH_TIME_TYPE watch_time = GET_INITIAL_WATCH_TIME();
 end
 
 _lcd.begin(16, 2);
 _lcd.setCursor(0, 0);
+//event int TOGGLE_24H_MODE_COMMAND;
+var _WATCH_TIME_TYPE watch_time = _GET_INITIAL_WATCH_TIME();
+event int WATCH_TIME;
 
-	
-var int i =0;
-
+var _WATCH_TIME_POSITION time_position;
 
 loop do
-	_lcd.clear();
-	_lcd.setCursor(0, 0);
-	_lcd.print( _WATCH_TIME_TYPE_to_text(_time) );
-	finalize 
-		_time = _INCREMENT_WATCH_TIME(_time);
-	with
+	watching ENTER_SET_WATCH_MODE_COMMAND do
+		par do
+			loop do
+				await 1s;
+				watch_time = _INCREMENT_WATCH_TIME(watch_time);
+				emit WATCH_TIME => watch_time;
+				_lcd.clear();
+				_lcd.setCursor(0, 0);
+				_lcd.print( _WATCH_TIME_to_text(watch_time) );
+			end
+		with
+			loop do
+				await TOGGLE_24H_MODE_COMMAND;
+				watch_time = _TOGGLE_24H_MODE_IN_WATCH_TIME(watch_time);
+			end
+		end
 	end
-	await 1s;
+
+	watching EXIT_SET_WATCH_MODE_COMMAND do
+		time_position = _INITIAL_WATCH_TIME_POSITION;
+		emit START_ENHANCING => time_position;
+		emit WATCH_BEING_SET;
+		par do
+			loop do
+				await 1s;
+				watch_time = _INCREMENT_WATCH_TIME_IN_SET_MODE(watch_time);
+				emit WATCH_TIME => watch_time;
+			end
+		with
+			loop do
+				await SET_WATCH_COMMAND;
+				watch_time = SET_WATCH_TIME(watch_time);
+				emit WATCH_TIME => watch_time;
+			end	
+		end
+	end
 end
+
